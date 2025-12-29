@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>P8 | Attachment WallDrop</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+if(!session){
+  window.location.href = "login.html";
+}
+</script>
+
+<style>
+:root{
+  --primary:#2563eb;
+  --primary-dark:#1e40af;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e5e7eb;
+  --text:#0f172a;
+  --muted:#64748b;
+  --success:#10b981;
+  --warning:#f59e0b;
+  --orange:#f97316;
+  --danger:#ef4444;
+  --radius:14px;
+  --shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui;
+  background:linear-gradient(180deg,#eef5ff,#f8fafc);
+  color:var(--text);
+}
+.app{display:flex;min-height:100vh}
+
+.sidebar{
+  width:270px;
+  background:linear-gradient(180deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  padding:24px 18px;
+}
+.logo{
+  width:44px;height:44px;border-radius:12px;
+  background:#fff;color:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800
+}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:30px}
+
+.nav a{
+  display:flex;gap:12px;align-items:center;
+  padding:12px 14px;border-radius:10px;
+  text-decoration:none;color:#fff;font-weight:600;
+  opacity:.85
+}
+.nav a.active,.nav a:hover{background:rgba(255,255,255,.2);opacity:1}
+
+.main{flex:1;padding:26px;overflow:auto}
+.page-title{font-size:22px;font-weight:800;margin-bottom:16px}
+
+/* WALL */
+.wall{
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+}
+.wall-row{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin-bottom:10px;
+}
+.rack{
+  background:#fff;
+  border-radius:8px;
+  padding:6px;
+  border:1.5px solid var(--border);
+  text-align:center;
+  cursor:pointer;
+}
+.rack h4{margin:0;font-size:12px;color:var(--muted)}
+.rack .count{font-weight:800;margin:4px 0}
+
+.slots{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:2px;
+}
+.slot{
+  height:16px;
+  background:#e5e7eb;
+  border-radius:2px;
+}
+.fill.green{background:var(--success)}
+.fill.yellow{background:var(--warning)}
+.fill.orange{background:var(--orange)}
+.fill.red{background:var(--danger)}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo">P8</div>
+    <div style="font-weight:700">Implant Operational Governance</div>
+  </div>
+
+   <nav class="nav">
+
+  <!-- COMPONENT DEPARTMENT -->
+  <div style="margin:14px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+    COMPONENT DEPARTMENT
+  </div>
+
+  <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
+  <a href="page2.html"><i class="fa fa-list-check"></i> Working Summary</a>
+  <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
+  <a href="page4.html"><i class="fa fa-check-circle"></i> Completed</a>
+  <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
+  <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
+
+ <!-- ATTACHMENT DEPARTMENT -->
+<div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+  ATTACHMENT DEPARTMENT
+</div>
+
+<a href="page7.html">
+  <i class="fa fa-paperclip"></i> Attachment DC
+</a>
+
+<a href="page8.html">
+  <i class="fa fa-cubes"></i> Attachment WallDrop
+</a>
+
+
+</nav>
+<button onclick="logout()" style="
+  background:none;
+  border:none;
+  color:#fff;
+  margin-top:20px;
+  font-weight:600;
+  cursor:pointer">
+  <i class="fa fa-sign-out-alt"></i> Logout
+</button>
+
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="page-title">Attachment WallDrop</div>
+  <div class="wall" id="wall"></div>
+</main>
+
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const DB = "attachment_dc_db";
+const RACK_CAP = 42;
+const COLS = [31,32,33,34,35];
+const ROWS = ["A","B","C","D"];
+
+/* ================= UTILS ================= */
+function severity(p){
+  if(p < 0.4) return "green";
+  if(p < 0.6) return "yellow";
+  if(p < 0.8) return "orange";
+  return "red";
+}
+
+/* ================= RENDER ================= */
+function render(){
+  const data = JSON.parse(localStorage.getItem(DB) || "[]")
+    .filter(r => r.status !== "Completed")
+    .reverse();
+
+  const wall = document.getElementById("wall");
+  let idx = 0;
+  let html = "";
+
+  ROWS.forEach(row=>{
+    html += `<div class="wall-row">`;
+    COLS.forEach(col=>{
+      const name = `${col}${row}`;
+      const items = data.slice(idx, idx + RACK_CAP);
+      const fill = Math.ceil((items.length / RACK_CAP) * 6);
+      const cls = severity(items.length / RACK_CAP);
+
+      html += `
+        <div class="rack">
+          <h4>${name}</h4>
+          <div class="count">${items.length} / ${RACK_CAP}</div>
+          <div class="slots">
+            ${Array(6).fill(0).map((_,i)=>
+              `<div class="slot ${i < fill ? "fill "+cls : ""}"></div>`
+            ).join("")}
+          </div>
+        </div>
+      `;
+      idx += RACK_CAP;
+    });
+    html += `</div>`;
+  });
+
+  wall.innerHTML = html;
+}
+
+render();
+</script>
+<script>
+function logout(){
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
+}
+</script>
+</body>
+</html>

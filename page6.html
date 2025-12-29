@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>P6 | WallDrop</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+if(!session){
+  window.location.href = "login.html";
+}
+</script>
+<style>
+:root{
+  --primary:#2563eb;
+  --primary-dark:#1e40af;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e5e7eb;
+  --text:#0f172a;
+  --muted:#64748b;
+  --success:#10b981;
+  --warning:#f59e0b;
+  --orange:#f97316;
+  --danger:#ef4444;
+  --radius:14px;
+  --shadow:0 10px 25px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui;
+  background:linear-gradient(180deg,#eef5ff,#f8fafc);
+  color:var(--text);
+}
+.app{display:flex;min-height:100vh}
+
+.sidebar{
+  width:270px;
+  background:linear-gradient(180deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  padding:24px 18px;
+}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:30px}
+.logo{
+  width:44px;height:44px;border-radius:12px;
+  background:#fff;color:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800
+}
+.nav a{
+  display:flex;gap:12px;align-items:center;
+  padding:12px 14px;border-radius:10px;
+  text-decoration:none;color:#fff;font-weight:600;
+  opacity:.85
+}
+.nav a.active,.nav a:hover{background:rgba(255,255,255,.2);opacity:1}
+
+.main{flex:1;padding:26px;overflow:auto}
+.page-header{margin-bottom:20px}
+.page-title{font-size:22px;font-weight:800}
+.page-sub{font-size:13px;color:var(--muted)}
+
+/* TYPE GRID */
+.type-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:18px;
+  transition: all 0.4s ease;
+}
+
+.type-grid.focus-mode {
+    grid-template-columns: 1fr;
+}
+
+.type-card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:18px;
+  box-shadow:var(--shadow);
+  cursor:pointer;
+  border:2px solid transparent;
+  transition: all 0.3s ease;
+  height: fit-content;
+}
+
+.type-card:hover{border-color:var(--primary)}
+
+.type-card.enlarged {
+    grid-column: 1 / -1;
+    border-color: var(--primary);
+    transform: scale(1.01);
+}
+
+.type-card.hidden {
+    display: none;
+}
+
+.type-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding-bottom: 10px;
+}
+.type-head h3{margin:0;font-size:16px}
+.type-count{font-size:22px;font-weight:800;color:var(--primary)}
+
+/* WALL LAYOUT - Adjusted for pair view */
+.wall{
+  margin-top:14px;
+  padding:14px;                /* 🔽 reduced */
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.wall-row{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:8px;              /* 🔽 reduced width gap */
+  margin-bottom:10px;
+}
+
+/* RACK STYLES */
+.rack{
+  background:#fff;
+  border-radius:8px;
+  padding:4px;
+  border:1.5px solid var(--border);
+  cursor:pointer;
+  transition:.2s;
+  text-align:center;
+  min-width:0;          /* 🔥 CRITICAL */
+}
+
+
+.rack:hover{border-color:var(--primary); transform: translateY(-2px); box-shadow: var(--shadow);}
+.rack h4{
+  margin:0 0 2px 0;
+  font-size:11px;       /* 🔽 narrower text */
+  line-height:1.1;
+  color: var(--muted);
+  font-weight:700;
+}
+
+.rack .count{
+  font-size:13px;       /* 🔽 */
+  font-weight:800;
+  margin-bottom:4px;
+}
+
+
+
+.slots{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:1px;              /* 🔽 tighter */
+}
+
+.slot{
+  width:100%;
+  aspect-ratio:1;
+  height:16px;                 /* 🔽 reduced height */
+  border-radius:2px;
+  background:#e5e7eb;
+}
+
+
+.fill.green{background:var(--success)}
+.fill.yellow{background:var(--warning)}
+.fill.orange{background:var(--orange)}
+.fill.red{background:var(--danger)}
+
+.back-btn {
+    display: none;
+    margin-bottom: 15px;
+    background: var(--muted);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+.enlarged .back-btn { display: inline-block; }
+
+/* MODAL */
+.modal-overlay{
+  display:none; position:fixed; inset:0;
+  background:rgba(15,23,42,.7); backdrop-filter:blur(4px);
+  align-items:center; justify-content:center; z-index:999
+}
+.modal{
+  background:#fff; width:900px; max-width:95%;
+  border-radius:16px; padding:24px; max-height:90vh; overflow:auto
+}
+.modal-header{
+  display:flex; justify-content:space-between; align-items:center;
+  border-bottom:1px solid var(--border); padding-bottom:10px
+}
+.close-btn{ font-size:22px; background:none; border:none; cursor:pointer }
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{ padding:10px; border-bottom:1px solid var(--border); font-size:13px; text-align:left }
+
+.export-btn {
+  margin-top: 16px; padding: 10px 16px;
+  background: var(--primary); color: #fff;
+  border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+}
+.wall-row.cols-1{
+  grid-template-columns: 1fr;
+}
+
+.wall-row.cols-2{
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.wall-row.cols-3{
+  grid-template-columns: repeat(3, 1fr);
+}
+.wall-row.cols-4{
+  grid-template-columns: repeat(4, 1fr); /* 🔥 COMPONENTS FIX */
+}
+</style>
+</head>
+
+<body>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h3 id="mTitle"></h3>
+        <small id="mSub" style="color:var(--muted)"></small>
+      </div>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">P6</div><div><div style="font-weight:700">Implant Operational Governance</div></div></div>
+    <nav class="nav">
+
+  <!-- COMPONENT DEPARTMENT -->
+  <div style="margin:14px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+    COMPONENT DEPARTMENT
+  </div>
+
+  <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
+  <a href="page2.html"><i class="fa fa-list-check"></i> Working Summary</a>
+  <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
+  <a href="page4.html"><i class="fa fa-check-circle"></i> Completed</a>
+  <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
+  <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
+
+ <!-- ATTACHMENT DEPARTMENT -->
+<div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+  ATTACHMENT DEPARTMENT
+</div>
+
+<a href="page7.html">
+  <i class="fa fa-paperclip"></i> Attachment DC
+</a>
+
+<a href="page8.html">
+  <i class="fa fa-cubes"></i> Attachment WallDrop
+</a>
+
+
+</nav>
+<button onclick="logout()" style="
+  background:none;
+  border:none;
+  color:#fff;
+  margin-top:20px;
+  font-weight:600;
+  cursor:pointer">
+  <i class="fa fa-sign-out-alt"></i> Logout
+</button>
+
+<script>
+function logout(){
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
+}
+</script>
+
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Virtual WallDrop</div>
+      <div class="page-sub" id="instruction">Select a Type to view Rack pairs</div>
+    </div>
+    <div class="type-grid" id="gridContainer"></div>
+  </main>
+</div>
+
+<script>
+const TYPES=[
+ 'JIG TRIAL','ABUTMENT MILLING TRIAL','COMPONENTS','NEW MODEL/ NEW SCAN','METAL TRIAL','OTHERS','RESIN TRIAL','SPECIAL TRAY','SPECIAL BITE BLOCK','BITE BLOCK',
+ 'TEETH SETTING WITH FRAME','TEETH SET',
+
+];
+
+const RACK_CAPACITIES = Array(12).fill(32);
+
+
+function getRecords(){
+  return JSON.parse(localStorage.getItem('furecordsv3')||'[]')
+    .filter(r=>r.status!=='Completed');
+}
+
+const RACK_SIZE = 32;
+
+function getRackSlice(rackIdx) {
+  const start = rackIdx * RACK_SIZE;
+  const end = start + RACK_SIZE;
+  return { start, end, cap: RACK_SIZE };
+}
+
+
+function severity(p){
+  if(p<0.4) return 'green';
+  if(p<0.6) return 'yellow';
+  if(p<0.8) return 'orange';
+  return 'red';
+}
+function render(){
+  const all=getRecords();
+  const grid = document.getElementById('gridContainer');
+  grid.innerHTML=TYPES.map(type=>{
+    const items=all.filter(r=>r.type===type);
+    return `
+      <div class="type-card" onclick="toggleEnlarge(this,'${type}')">
+        <button class="back-btn" onclick="event.stopPropagation(); resetGrid()"><i class="fa fa-arrow-left"></i> Back to Types</button>
+        <div class="type-head">
+          <h3>${type}</h3>
+          <div class="type-count">${items.length}</div>
+        </div>
+        <div class="wall" style="display:none"></div>
+      </div>`;
+  }).join('');
+}
+
+function toggleEnlarge(card, type) {
+    const grid = document.getElementById('gridContainer');
+    if (card.classList.contains('enlarged')) return;
+
+    document.querySelectorAll('.type-card').forEach(c => {
+        if (c === card) {
+            c.classList.add('enlarged');
+        } else {
+            c.classList.add('hidden');
+        }
+    });
+    grid.classList.add('focus-mode');
+    document.getElementById('instruction').innerText = `Viewing Racks for: ${type}`;
+    showRacks(card, type);
+}
+
+function resetGrid() {
+    const grid = document.getElementById('gridContainer');
+    document.querySelectorAll('.type-card').forEach(c => {
+        c.classList.remove('enlarged', 'hidden');
+        const wall = c.querySelector('.wall');
+        if(wall) wall.style.display = 'none';
+    });
+    grid.classList.remove('focus-mode');
+    document.getElementById('instruction').innerText = "Select a Type to view Rack pairs";
+}
+const TYPE_COLUMNS = {
+  'ABUTMENT MILLING TRIAL': 1,
+  'COMPONENTS': 4,
+  'NEW MODEL/ NEW SCAN': 2,
+  'SPECIAL TRAY': 2,
+  'BITE BLOCK': 2,
+  'TEETH SETTING WITH FRAME': 2,
+  'TEETH SET': 2,
+  'OTHERS': 1,
+  'SPECIAL BITE BLOCK': 1,
+};
+const TYPE_COLUMN_START = {
+  'JIG TRIAL': 1,
+  'ABUTMENT MILLING TRIAL': 4,
+  'COMPONENTS': 5,
+  'NEW MODEL/ NEW SCAN': 9,
+  'METAL TRIAL': 11,
+  'OTHERS': 14,
+  'RESIN TRIAL': 15,
+  'SPECIAL TRAY': 18,
+  'SPECIAL BITE BLOCK': 20,
+  'BITE BLOCK': 21,
+  'TEETH SETTING WITH FRAME': 23,
+  'TEETH SET': 25
+  
+};
+
+function showRacks(card, type){
+  const wall = card.querySelector('.wall');
+  wall.style.display = 'block';
+
+  const items = getRecords().filter(r => r.type === type).reverse();
+
+  const columns = TYPE_COLUMNS[type] || 3;
+  const totalRows = 6;
+  const maxRacks = columns * totalRows;
+
+  const ROW_LABELS = ['A','B','C','D','E','F'];
+  const startCol = TYPE_COLUMN_START[type] || 1; // ⭐ GLOBAL START
+
+  let idx = 0;
+  let html = '';
+
+  for(let row = 0; row < totalRows; row++){
+    html += `<div class="wall-row cols-${columns}">`;
+
+    for(let col = 0; col < columns; col++){
+      if (idx >= maxRacks) break;
+
+      // ✅ CONTINUOUS GLOBAL NAMING
+      const rackName = `${startCol + col}${ROW_LABELS[row]}`;
+
+      const slice = getRackSlice(idx);
+      const rackItems = items.slice(slice.start, slice.end);
+      const count = rackItems.length;
+
+      const filled = Math.ceil((count / slice.cap) * 6);
+      const cls = severity(count / slice.cap);
+
+      html += `
+        <div class="rack" onclick="event.stopPropagation(); openRack('${type}', ${idx})">
+          <h4>${rackName}</h4>
+          <div class="count">${count} / ${slice.cap}</div>
+          <div class="slots">
+            ${Array(6).fill(0).map((_, s) =>
+              `<div class="slot ${s < filled ? 'fill ' + cls : ''}"></div>`
+            ).join('')}
+          </div>
+        </div>
+      `;
+      idx++;
+    }
+
+    html += `</div>`;
+  }
+
+  wall.innerHTML = html;
+}
+
+
+function openRack(type,idx){
+  const slice = getRackSlice(idx);
+  const items = getRecords().filter(r=>r.type===type).reverse().slice(slice.start, slice.end);
+
+  mTitle.innerText=`${type} – Rack ${idx+1}`;
+  mSub.innerText=`${items.length} Jobcards (Cap: ${slice.cap})`;
+
+  modalBody.innerHTML=`
+    <table>
+      <thead><tr><th>Jobcard</th><th>Created</th><th>Follow-Up</th></tr></thead>
+      <tbody>
+      ${items.map(r=>`
+        <tr>
+          <td><b>${r.jobcard}</b></td>
+          <td>${r.timestamp}</td>
+          <td>${r.todayFollow}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    ${items.length > 0 ? `<button class="export-btn" onclick="exportRack('${type}',${idx})"><i class="fa fa-file-excel"></i> Export Rack</button>` : '<p style="margin-top:15px">Rack is empty</p>'}`;
+  modal.style.display='flex';
+}
+
+function exportRack(type,idx){
+  const slice = getRackSlice(idx);
+  const items = getRecords().filter(r=>r.type===type).reverse().slice(slice.start, slice.end);
+  const ws=XLSX.utils.json_to_sheet(items);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Rack_Data');
+  XLSX.writeFile(wb,`Rack_${idx+1}_${type}.xlsx`);
+}
+
+function closeModal(){modal.style.display='none'}
+window.onclick=e=>{if(e.target===modal)closeModal()}
+
+render();
+</script>
+</body>
+</html>

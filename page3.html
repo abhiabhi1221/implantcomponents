@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>P3 | Analytics</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+
+// Not logged in → go to login
+if (!session) {
+  window.location.href = "login.html";
+}
+
+// User role → NO access to Completed page
+if (session.role === "user") {
+  window.location.href = "index.html";
+}
+</script>
+<script>
+if (!session) {
+  window.location.href = "login.html";
+}
+
+// 🚫 BLOCK USER ROLE FROM ANALYTICS
+if (session.role === "user") {
+  window.location.href = "index.html";
+}
+</script>
+
+<style>
+:root{
+  --primary:#2563eb;
+  --primary-dark:#1e40af;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e5e7eb;
+  --text:#0f172a;
+  --muted:#64748b;
+  --danger:#dc2626;
+  --radius:14px;
+  --shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui;
+  background:linear-gradient(180deg,#eef5ff,#f8fafc);
+  color:var(--text);
+}
+
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+  width:270px;
+  background:linear-gradient(180deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  padding:24px 18px;
+  display:flex;flex-direction:column;
+}
+.brand{
+  display:flex;gap:12px;align-items:center;margin-bottom:30px
+}
+.logo{
+  width:44px;height:44px;border-radius:12px;
+  background:#fff;color:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800
+}
+.nav{flex:1}
+.nav a{
+  display:flex;gap:12px;align-items:center;
+  padding:12px 14px;border-radius:10px;
+  text-decoration:none;color:#fff;font-weight:600;
+  opacity:.85;margin-bottom:4px;
+  transition:all 0.2s;
+}
+.nav a.active,.nav a:hover{background:rgba(255,255,255,.2);opacity:1}
+
+/* MAIN CONTENT */
+.main{flex:1;padding:26px;overflow:auto}
+
+.page-header{margin-bottom:20px}
+.page-title{font-size:22px;font-weight:800}
+
+/* ANALYTICS GRID */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.card.type-chart {
+  grid-column: 1 / 2;
+  grid-row: 1;
+}
+
+.card.status-chart {
+  grid-column: 2 / 3;
+  grid-row: 1;
+}
+
+.card.stage-chart {
+  grid-column: 1 / 3; /* full width */
+  grid-row: 3;
+}
+
+.card h3 {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  color: var(--muted);
+  width: 100%;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+.stage-chart .chart-container {
+  height: 320px; /* taller bar chart */
+}
+.card.delay-chart {
+  grid-column: 1 / 3;
+}
+
+
+@media(max-width:768px){
+  .analytics-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo">P3</div>
+    <div>
+      <div style="font-weight:700">Implant Operational Governance</div>
+         </div>
+  </div>
+
+  <nav class="nav">
+
+  <!-- COMPONENT DEPARTMENT -->
+  <div style="margin:14px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+    COMPONENT DEPARTMENT
+  </div>
+
+  <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
+  <a href="page2.html"><i class="fa fa-list-check"></i> Working Summary</a>
+  <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
+  <a href="page4.html"><i class="fa fa-check-circle"></i> Completed</a>
+  <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
+  <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
+
+  <!-- ATTACHMENT DEPARTMENT -->
+<div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+  ATTACHMENT DEPARTMENT
+</div>
+
+<a href="page7.html">
+  <i class="fa fa-paperclip"></i> Attachment DC
+</a>
+
+<a href="page8.html">
+  <i class="fa fa-cubes"></i> Attachment WallDrop
+</a>
+
+
+</nav>
+<button onclick="logout()" style="
+  background:none;
+  border:none;
+  color:#fff;
+  margin-top:20px;
+  font-weight:600;
+  cursor:pointer">
+  <i class="fa fa-sign-out-alt"></i> Logout
+</button>
+
+<script>
+function logout(){
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
+}
+</script>
+
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div class="page-title">Performance Analytics</div>
+  </div>
+
+  <div class="analytics-grid">
+    <div class="card type-chart">
+      <h3>Component Type Distribution</h3>
+      <div class="chart-container">
+        <canvas id="typeChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card status-chart">
+      <h3>Active vs Postponed vs Backlog</h3>
+      <div class="chart-container">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card stage-chart">
+
+      <h3>Postpone Intensity (Stage 0-6)</h3>
+      <div class="chart-container">
+        <canvas id="stageChart"></canvas>
+      </div>
+    </div>
+    <div class="card delay-chart">
+  <h3>Delay Escalation (Backlog Age)</h3>
+  <div class="chart-container">
+    <canvas id="delayChart"></canvas>
+  </div>
+</div>
+
+  </div>
+</main>
+
+</div>
+
+<script>
+// --- DATA LOADING ---
+const ACTIVE = JSON.parse(localStorage.getItem("furecordsv3") || "[]");
+
+function parseDate(str){
+  if(!str) return null;
+  const p = str.split(" ")[0].split("/");
+  return new Date(p[2], p[1]-1, p[0]);
+}
+
+function diffDays(d){
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  return Math.floor((now - d) / (1000 * 60 * 60 * 24));
+}
+
+
+// --- HELPER: COUNT BY KEY ---
+function countBy(arr, key) {
+  return arr.reduce((acc, obj) => {
+    const val = obj[key] || "Unknown";
+    acc[val] = (acc[val] || 0) + 1;
+    return acc;
+  }, {});
+}
+const delayTiers = {
+  "> 1 Day": 0,
+  "> 7 Days": 0,
+  "> 14 Days": 0,
+  "> 30 Days": 0
+};
+
+ACTIVE.forEach(r => {
+  if (r.status === "Completed") return;
+
+  const d = parseDate(r.todayFollow);
+  if (!d) return;
+
+  const days = diffDays(d);
+
+  if (days > 1)  delayTiers["> 1 Day"]++;
+  if (days > 7)  delayTiers["> 7 Days"]++;
+  if (days > 14) delayTiers["> 14 Days"]++;
+  if (days > 30) delayTiers["> 30 Days"]++;
+});
+
+// --- COLOR PALETTE ---
+const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
+
+// 1. TYPE CHART (Pie)
+const typeCtx = document.getElementById('typeChart').getContext('2d');
+const typeData = countBy(ACTIVE, "type");
+new Chart(typeCtx, {
+  type: 'pie',
+  data: {
+    labels: Object.keys(typeData),
+    datasets: [{
+      data: Object.values(typeData),
+      backgroundColor: colors
+    }]
+  },
+  options: { maintainAspectRatio: false }
+});
+
+// 2. STATUS CHART (Doughnut)
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusStats = {
+  "Active": 0,
+  "Postponed": 0,
+  "Backlog": 0
+};
+
+ACTIVE.forEach(r => {
+  if (r.status === "Completed") return;
+
+  const d = parseDate(r.todayFollow);
+  if (!d) return;
+
+  const days = diffDays(d);
+
+  if (r.status === "Postponed") {
+    statusStats.Postponed++;
+  } else if (days > 1) {
+    statusStats.Backlog++;   // 🔥 SAME RULE AS PAGE 5
+  } else {
+    statusStats.Active++;
+  }
+});
+
+new Chart(statusCtx, {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(statusStats),
+    datasets: [{
+      data: Object.values(statusStats),
+      backgroundColor: ['#2563eb', '#f59e0b', '#ef4444']
+    }]
+  },
+  options: { maintainAspectRatio: false, cutout: '60%' }
+});
+
+// 3. STAGE CHART (Bar)
+const stageCtx = document.getElementById('stageChart').getContext('2d');
+const stageMap = {};
+// Initialize stages 0-6
+for(let i=0; i<=6; i++) stageMap[i] = 0;
+ACTIVE.forEach(r => {
+  const s = r.postponeIndex ?? 0;
+  if(s <= 6) stageMap[s]++;
+});
+new Chart(stageCtx, {
+  type: 'bar',
+  data: {
+    labels: Object.keys(stageMap).map(k => "Stage " + k),
+    datasets: [{
+      label: 'Jobcards',
+      data: Object.values(stageMap),
+      backgroundColor: '#2563eb'
+    }]
+  },
+  options: { 
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+  }
+});
+const delayCtx = document.getElementById('delayChart').getContext('2d');
+
+new Chart(delayCtx, {
+  type: 'bar',
+  data: {
+    labels: Object.keys(delayTiers),
+    datasets: [{
+      label: 'Jobcards',
+      data: Object.values(delayTiers),
+      backgroundColor: ['#fde047','#fb923c','#f87171','#dc2626']
+    }]
+  },
+  options: {
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }
+});
+
+
+</script>
+</body>
+</html>

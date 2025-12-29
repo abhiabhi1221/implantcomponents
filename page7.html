@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>P7 | Attachment DC Follow-Up</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+if(!session){
+  window.location.href = "login.html";
+}
+</script>
+<style>
+/* ===== SAME CONSISTENT UI ===== */
+:root{
+  --primary:#2563eb;
+  --primary-dark:#1e40af;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e5e7eb;
+  --text:#0f172a;
+  --muted:#64748b;
+  --success:#10b981;
+  --danger:#dc2626;
+  --radius:14px;
+  --shadow:0 10px 25px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui;
+  background:linear-gradient(180deg,#eef5ff,#f8fafc);
+  color:var(--text);
+}
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+  width:270px;
+  background:linear-gradient(180deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  padding:24px 18px;
+}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:30px}
+.logo{
+  width:44px;height:44px;border-radius:12px;
+  background:#fff;color:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800
+}
+.nav a{
+  display:flex;gap:12px;align-items:center;
+  padding:12px 14px;border-radius:10px;
+  text-decoration:none;color:#fff;font-weight:600;
+  opacity:.85
+}
+.nav a.active,.nav a:hover{background:rgba(255,255,255,.2);opacity:1}
+
+/* MAIN */
+.main{flex:1;padding:26px;overflow:auto}
+.page-header{margin-bottom:20px}
+.page-title{font-size:22px;font-weight:800}
+.page-sub{font-size:13px;color:var(--muted)}
+
+/* CONTROLS (INPUT & SEARCH) */
+.controls-card {
+  background: var(--card);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-width: 250px;
+}
+
+input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+.btn {
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: 0.2s;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: #fee2e2; color: var(--danger); }
+.btn-ghost { background: #fff; border: 1px solid var(--border); color: var(--muted); }
+
+/* TABLE */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th { background: #f1f5f9; padding: 14px; font-size: 13px; color: var(--muted); text-align: left; }
+tbody td { padding: 14px; border-top: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+
+/* STATUS BADGES */
+.badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.badge-active { background: #eff6ff; color: var(--primary); }
+.badge-done { background: #dcfce7; color: var(--success); }
+
+/* COMPLETED ROW STYLE */
+.row-done td { color: var(--muted); opacity: 0.8; }
+.row-done b { text-decoration: line-through; }
+
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">P7</div>
+      <div>
+        <div style="font-weight:700">Attachment DC</div>
+        <div style="font-size:12px;opacity:.8">Control</div>
+      </div>
+    </div>
+   <nav class="nav">
+
+  <!-- COMPONENT DEPARTMENT -->
+  <div style="margin:14px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+    COMPONENT DEPARTMENT
+  </div>
+
+  <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
+  <a href="page2.html"><i class="fa fa-list-check"></i> Working Summary</a>
+  <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
+  <a href="page4.html"><i class="fa fa-check-circle"></i> Completed</a>
+  <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
+  <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
+
+ <!-- ATTACHMENT DEPARTMENT -->
+<div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+  ATTACHMENT DEPARTMENT
+</div>
+
+<a href="page7.html">
+  <i class="fa fa-paperclip"></i> Attachment DC
+</a>
+
+<a href="page8.html">
+  <i class="fa fa-cubes"></i> Attachment WallDrop
+</a>
+
+
+</nav>
+<button onclick="logout()" style="
+  background:none;
+  border:none;
+  color:#fff;
+  margin-top:20px;
+  font-weight:600;
+  cursor:pointer">
+  <i class="fa fa-sign-out-alt"></i> Logout
+</button>
+
+<script>
+function logout(){
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
+}
+</script>
+
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Attachment DC Follow-Up</div>
+      <div class="page-sub">Track and manage DC attachments</div>
+    </div>
+
+    <div class="controls-card">
+      <div class="input-group">
+  <input type="text" id="jobInput" placeholder="Enter Jobcard No..." onkeypress="handleEnter(event)">
+  <input type="text" id="boxInput" placeholder="Box No">
+  <button class="btn btn-primary" onclick="addJob()">
+    <i class="fa fa-plus"></i> Add
+  </button>
+</div>
+
+
+      
+      <div class="input-group">
+        <span style="display:flex;align-items:center;color:var(--muted);padding-right:10px">
+          <i class="fa fa-search"></i>
+        </span>
+        <input type="text" id="searchInput" placeholder="Search Jobcard..." oninput="render()">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Jobcard</th>
+              <th>Box No</th>
+              <th>Rack</th>
+              <th>Entry Time</th>
+              <th>Status</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+const DB_NAME = "attachment_dc_db";
+// ===== ATTACHMENT RACK CONFIG =====
+const ATTACHMENT_RACKS = ["31A", "32A", "33A", "34A", "35A"];
+const ATTACHMENT_CAPACITY = 42;
+
+// Auto-pick next available rack
+function getNextAttachmentRack(records){
+  for (let rack of ATTACHMENT_RACKS) {
+    const count = records.filter(
+      r => r.rack === rack && r.status !== "Completed"
+    ).length;
+
+    if (count < ATTACHMENT_CAPACITY) {
+      return rack;
+    }
+  }
+  return null; // all racks full
+}
+
+
+
+// Load data or initialize empty array
+let records = JSON.parse(localStorage.getItem(DB_NAME) || "[]");
+
+/* ================== UTILS ================== */
+const pad = n => n.toString().padStart(2, "0");
+
+function getNow() {
+  const d = new Date();
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+
+function save() {
+  localStorage.setItem(DB_NAME, JSON.stringify(records));
+  render();
+}
+
+function handleEnter(e) {
+  if (e.key === "Enter") addJob();
+}
+function loadAttachmentRacks(){
+  const sel = document.getElementById("rackSelect");
+  if(!sel) return;
+
+  sel.innerHTML = `<option value="">Select Rack</option>` +
+    ATTACHMENT_RACKS.map(r =>
+      `<option value="${r}">${r}</option>`
+    ).join("");
+}
+
+
+/* ================== ACTIONS ================== */
+
+function addJob() {
+  const job = jobInput.value.trim().toUpperCase();
+  const box = boxInput.value.trim();
+
+  if (!job) return alert("Please enter Jobcard Number");
+
+  // 🔥 AUTO RACK ASSIGN
+  const rack = getNextAttachmentRack(records);
+
+  if (!rack) {
+    alert("⚠️ All Attachment racks (31A–35A) are full");
+    return;
+  }
+
+  const newRecord = {
+    id: Date.now().toString(),
+    jobcard: job,
+    boxNumber: box,
+    rack: rack,              // ✅ AUTO ASSIGNED
+    timestamp: getNow(),
+    status: "Active"
+  };
+
+  records.unshift(newRecord);
+  jobInput.value = "";
+  boxInput.value = "";
+
+  save();
+}
+
+function markComplete(id) {
+  const r = records.find(x => x.id === id);
+  if (r) {
+    // Toggle completion status
+    if(r.status === "Completed") {
+      if(confirm("Revert to Active?")) r.status = "Active";
+    } else {
+      if(confirm("Mark this DC Attachment as Completed?")) r.status = "Completed";
+    }
+    save();
+  }
+}
+
+function deleteJob(id) {
+  if (confirm("Are you sure you want to delete this record?")) {
+    records = records.filter(x => x.id !== id);
+    save();
+  }
+}
+
+/* ================== RENDER ================== */
+
+function render() {
+  const tbody = document.getElementById('tableBody');
+  const query = document.getElementById('searchInput').value.trim().toUpperCase();
+
+  // Filter based on search
+  const filtered = records.filter(r => r.jobcard.includes(query));
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:#ccc">No records found</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const isDone = r.status === "Completed";
+    const badgeClass = isDone ? "badge-done" : "badge-active";
+    const rowClass = isDone ? "row-done" : "";
+    const btnIcon = isDone ? "fa-rotate-left" : "fa-check";
+    const btnTitle = isDone ? "Revert" : "Complete";
+    const btnColor = isDone ? "btn-ghost" : "btn-success";
+
+    return `
+      <tr class="${rowClass}">
+        <td><b>${r.jobcard}</b></td>
+        <td>${r.boxNumber || "-"}</td>
+        <td><b>${r.rack || "-"}</b></td>
+
+        <td>${r.timestamp}</td>
+        <td><span class="badge ${badgeClass}">${r.status}</span></td>
+        <td style="text-align:right">
+          <button class="btn ${btnColor}" onclick="markComplete('${r.id}')" title="${btnTitle}">
+            <i class="fa ${btnIcon}"></i>
+          </button>
+          <button class="btn btn-danger" onclick="deleteJob('${r.id}')" title="Delete">
+            <i class="fa fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// Initial Render
+render();
+
+</script>
+</body>
+</html>

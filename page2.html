@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>P2 | Working Summary</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+
+// Not logged in → go to login
+if (!session) {
+  window.location.href = "login.html";
+}
+
+// User role → NO access to Completed page
+if (session.role === "user") {
+  window.location.href = "index.html";
+}
+</script>
+<script>
+if (!session) {
+  window.location.href = "login.html";
+}
+
+// 🚫 BLOCK USER ROLE FROM ANALYTICS
+if (session.role === "user") {
+  window.location.href = "index.html";
+}
+</script>
+<style>
+:root{
+  --primary:#2563eb; --primary-dark:#1e40af; --bg:#f8fafc; --card:#ffffff;
+  --border:#e5e7eb; --text:#0f172a; --muted:#64748b; --danger:#dc2626;
+  --radius:14px; --shadow:0 10px 25px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:Inter,system-ui;
+  background:linear-gradient(180deg,#eef5ff,#f8fafc); color:var(--text);
+}
+.app{display:flex; min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+  width:270px; background:linear-gradient(180deg,var(--primary),var(--primary-dark));
+  color:#fff; padding:24px 18px; display:flex; flex-direction:column;
+}
+.brand{display:flex; gap:12px; align-items:center; margin-bottom:30px}
+.logo{
+  width:44px; height:44px; border-radius:12px; background:#fff; color:var(--primary);
+  display:flex; align-items:center; justify-content:center; font-weight:800
+}
+.nav{flex:1}
+.nav a{
+  display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:10px;
+  text-decoration:none; color:#fff; font-weight:600; opacity:.85; margin-bottom:4px; transition:0.2s;
+}
+.nav a.active, .nav a:hover{background:rgba(255,255,255,.2); opacity:1}
+
+/* MAIN CONTENT */
+.main{flex:1; padding:26px; overflow:auto}
+.page-header{margin-bottom:20px}
+.page-title{font-size:22px; font-weight:800}
+
+/* KPI CARDS */
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px}
+.kpi{
+  background:var(--card); border-radius:var(--radius); padding:18px; 
+  box-shadow:var(--shadow); cursor:pointer; border:2px solid transparent; transition:0.2s;
+}
+.kpi:hover{transform:translateY(-3px); border-color:var(--primary)}
+.kpi.active{border-color:var(--primary); background:#f0f7ff}
+.kpi h4{margin:0; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px}
+.kpi .val{font-size:28px; font-weight:800; margin-top:6px; color:var(--primary)}
+
+/* TABLE & CARDS */
+.card{background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); margin-bottom:22px}
+.table-wrap{border:1px solid var(--border); border-radius:12px; overflow:hidden}
+table{width:100%; border-collapse:collapse}
+thead th{background:#f1f5f9; padding:14px; font-size:12px; text-transform:uppercase; color:var(--muted); text-align:left; font-weight:700}
+tbody td{padding:14px; border-top:1px solid var(--border); font-size:14px; vertical-align:middle}
+
+/* BUTTONS */
+.btn{
+  padding:8px 12px; border-radius:8px; border:none; font-weight:700; font-size:11px;
+  cursor:pointer; display:inline-flex; gap:4px; align-items:center; transition:transform 0.1s;
+}
+.btn:active{transform:scale(0.98)}
+.btn-ghost{background:#fff; border:1px solid var(--border); color:var(--primary)}
+.btn-primary{background:var(--primary); color:#fff}
+.btn-danger{background:#fee2e2; color:var(--danger)}
+
+/* REMARK BOX */
+.expand-btn{cursor:pointer; color:var(--primary); transition:0.3s; margin-right:8px}
+.remark-row{background:#f9fafb}
+.remark-box{padding:12px 40px; border-left:4px solid var(--primary); font-size:13px; color:#475569}
+.hidden{display:none}
+
+@media(max-width:1000px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">P2</div>
+      <div>
+        <div style="font-weight:700">Implant Operational Governance</div>
+        <div style="font-size:12px;opacity:.8">Control</div>
+      </div>
+    </div>
+   
+  <nav class="nav">
+
+  <!-- COMPONENT DEPARTMENT -->
+  <div style="margin:14px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+    COMPONENT DEPARTMENT
+  </div>
+
+  <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
+  <a href="page2.html"><i class="fa fa-list-check"></i> Working Summary</a>
+  <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
+  <a href="page4.html"><i class="fa fa-check-circle"></i> Completed</a>
+  <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
+  <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
+
+  <!-- ATTACHMENT DEPARTMENT -->
+<div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+  ATTACHMENT DEPARTMENT
+</div>
+
+<a href="page7.html">
+  <i class="fa fa-paperclip"></i> Attachment DC
+</a>
+
+<a href="page8.html">
+  <i class="fa fa-cubes"></i> Attachment WallDrop
+</a>
+
+<button onclick="logout()" style="
+  background:none;
+  border:none;
+  color:#fff;
+  margin-top:20px;
+  font-weight:600;
+  cursor:pointer">
+  <i class="fa fa-sign-out-alt"></i> Logout
+</button>
+</nav>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Active Working Summary</div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi active" id="kpi-Total" onclick="setFilter('Total')"><h4>Total Active</h4><div class="val" id="kTotal">0</div></div>
+      <div class="kpi" id="kpi-Today" onclick="setFilter('Today')"><h4>Due Today</h4><div class="val" id="kToday">0</div></div>
+      <div class="kpi" id="kpi-Upcoming" onclick="setFilter('Upcoming')"><h4>Upcoming</h4><div class="val" id="kUpcoming">0</div></div>
+      <div class="kpi" id="kpi-Backlog" onclick="setFilter('Backlog')"><h4>Backlogs</h4><div class="val" id="kBacklog">0</div></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+  <h3 id="table-title">Follow-Up Records</h3>
+
+  <div style="display:flex;gap:10px;align-items:center">
+    <input
+      id="searchInput"
+      placeholder="Search Jobcard / Type..."
+      oninput="render()"
+      style="
+        padding:8px 12px;
+        border-radius:8px;
+        border:1px solid var(--border);
+        font-size:13px;
+        min-width:220px
+      "
+    >
+    <button class="btn btn-primary" onclick="exportActiveToExcel()">
+      <i class="fa fa-file-excel"></i> Export Excel
+    </button>
+  </div>
+</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Jobcard</th>
+              <th>Type</th>
+              <th>Follow-Up Date</th>
+              <th>Status</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// --- CONFIGURATION ---
+const DB = "furecordsv3";
+const COMPLETED_DB = "completed_data_v3";
+const DELETE_DB = "delete_logs_v3";
+
+// Sequence of postpone days per type
+const TYPE_LIMITS = {
+  "METAL":[3,7,15,30,45,60],
+  "SPECIAL BITE BLOCK":[1,3,7,30,60],
+  "BITE BLOCK":[1,3,7,30,60],
+  "SPECIAL TRAY":[1,7,15,30,60],
+  "JIG":[1,3,7,30,60],
+  "TEETH SETTING WITH FRAME":[3,7,15,30,60],
+  "TEETH SET":[3,7,15,30,60],
+  "BODY TRIAL":[1,3,7,15,60],
+  "ABUTMENT MILLING TRIAL":[1,3,7,30,60],
+  "RESINTRVAL":[1,3,7,30,60],
+  "COMPONENTS":[3,7,15,30,60]
+};
+
+// --- STATE ---
+let records = JSON.parse(localStorage.getItem(DB) || "[]");
+let currentFilter = 'Total';
+let postponeTargetId = null;
+
+
+// --- UTILS ---
+const pad = n => n.toString().padStart(2,"0");
+function parseDate(str){ 
+  if(!str) return null; 
+  const p = str.split(" ")[0].split("/"); 
+  return new Date(p[2], p[1]-1, p[0]); 
+}
+function formatDT(d){ 
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; 
+}
+function addDays(str, days){ 
+  const d = parseDate(str); 
+  d.setDate(d.getDate() + days); 
+  return formatDT(d); 
+}
+
+// --- ACTIONS ---
+function setFilter(f){
+  currentFilter = f;
+  document.querySelectorAll('.kpi').forEach(k => k.classList.remove('active'));
+  document.getElementById('kpi-'+f).classList.add('active');
+  render();
+}
+
+function toggleRow(id){
+  const row = document.getElementById('row-'+id);
+  const icon = document.getElementById('icon-'+id);
+  row.classList.toggle('hidden');
+  icon.classList.toggle('fa-chevron-down');
+  icon.classList.toggle('fa-chevron-right');
+}
+
+function addRemark(id){
+  const r = records.find(x => x.id === id);
+  const v = prompt("Enter Remark");
+  if(!v) return;
+
+  const ts = formatDT(new Date());
+  r.remark = (r.remark || "") + `<div>• ${ts} — ${v}</div>`;
+
+
+  save();
+}
+
+function postpone(id){
+  const r = records.find(x => x.id === id);
+  postponeTargetId = id;
+
+  document.getElementById("modalDate").value = r.todayFollow.split(" ")[0];
+  document.getElementById("modalRemark").value = "";
+
+  document.getElementById("postponeModal").style.display = "block";
+}
+function closePostpone(){
+  document.getElementById("postponeModal").style.display = "none";
+  postponeTargetId = null;
+}
+
+function savePostpone(){
+  const r = records.find(x => x.id === postponeTargetId);
+  if(!r) return;
+
+  const newDate = document.getElementById("modalDate").value;
+  const remark = document.getElementById("modalRemark").value.trim();
+
+  if(!remark){
+    alert("Remark is required");
+    return;
+  }
+
+  // Preserve original time
+  const time = r.todayFollow.split(" ")[1];
+  r.todayFollow = newDate + " " + time;
+
+  // Append remark history
+  const ts = formatDT(new Date());
+r.remark = (r.remark || "") + `<div>• ${ts} — (Postpone) ${remark}</div>`;
+
+
+  r.status = "Postponed";
+
+  save();
+  closePostpone();
+}
+
+
+
+
+function complete(id){
+  if(!confirm("Mark as completed?")) return;
+  const i = records.findIndex(r => r.id === id);
+  const r = records[i];
+  r.completedAt = formatDT(new Date());
+  r.status = "Completed";
+  let c = JSON.parse(localStorage.getItem(COMPLETED_DB) || "[]");
+  c.push(r); 
+  localStorage.setItem(COMPLETED_DB, JSON.stringify(c));
+  records.splice(i, 1); 
+  save();
+}
+
+function del(id){
+  const reason = prompt("Reason for deleting?");
+  if(!reason) return;
+  const i = records.findIndex(x => x.id === id);
+  const r = records[i];
+  let d = JSON.parse(localStorage.getItem(DELETE_DB) || "[]");
+  d.push({...r, reason, deletedAt: formatDT(new Date())});
+  localStorage.setItem(DELETE_DB, JSON.stringify(d));
+  records.splice(i, 1);
+  save();
+}
+
+// --- RENDERING ---
+function render(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  let counts = {Total: records.length, Today: 0, Upcoming: 0, Backlog: 0};
+  
+  // Sort oldest follow-ups first
+  records.sort((a,b) => parseDate(a.todayFollow) - parseDate(b.todayFollow));
+
+  tableBody.innerHTML = "";
+const q = (searchInput?.value || "").toLowerCase();
+
+records.forEach(r => {
+
+    const d = parseDate(r.todayFollow);
+    let rowType = 'Upcoming';
+    if(d){
+      d.setHours(0,0,0,0);
+      if(d.getTime() === now.getTime()){ counts.Today++; rowType = 'Today'; }
+      else if(d < now){ counts.Backlog++; rowType = 'Backlog'; }
+      else counts.Upcoming++;
+    }
+
+    // KPI filter
+if(currentFilter !== 'Total' && currentFilter !== rowType) return;
+
+// 🔍 SEARCH FILTER
+if (
+  q &&
+  !r.jobcard.toLowerCase().includes(q) &&
+  !r.type.toLowerCase().includes(q)
+) return;
+
+
+    tableBody.innerHTML += `
+      <tr>
+        <td>
+          <i id="icon-${r.id}" class="fa fa-chevron-right expand-btn" onclick="toggleRow('${r.id}')"></i>
+          <b>${r.jobcard}</b>
+        </td>
+        <td>${r.type}</td>
+        <td>${r.todayFollow}</td>
+        <td><span style="font-weight:700; color:${rowType==='Backlog'?'#dc2626':rowType==='Today'?'#10b981':'#2563eb'}">${r.status||'Active'}</span></td>
+        <td style="text-align:right">
+          <button class="btn btn-ghost" title="Remark" onclick="addRemark('${r.id}')"><i class="fa fa-comment"></i></button>
+          <button class="btn btn-ghost" onclick="postpone('${r.id}')">Postpone</button>
+          <button class="btn btn-primary" onclick="complete('${r.id}')">COMPLETED</button>
+          <button class="btn btn-danger" onclick="del('${r.id}')"><i class="fa fa-trash"></i></button>
+        </td>
+      </tr>
+      <tr id="row-${r.id}" class="remark-row hidden">
+        <td colspan="5">
+          <div class="remark-box">
+            <strong>Remark History:</strong><br>
+            ${r.remark || "No remarks entered."}
+          </div>
+        </td>
+      </tr>`;
+  });
+
+  kTotal.innerText = counts.Total;
+  kToday.innerText = counts.Today;
+  kUpcoming.innerText = counts.Upcoming;
+  kBacklog.innerText = counts.Backlog;
+}
+
+function save(){ localStorage.setItem(DB, JSON.stringify(records)); render(); }
+
+function exportActiveToExcel() {
+  const ws = XLSX.utils.json_to_sheet(records.map(r => ({
+    Jobcard: r.jobcard, 
+    Type: r.type, 
+    FollowUpDate: r.todayFollow, 
+    Remark: r.remark, 
+    Status: r.status
+  })));
+  const wb = XLSX.utils.book_new(); 
+  XLSX.utils.book_append_sheet(wb, ws, "Active_FollowUps");
+  XLSX.writeFile(wb, "Working_Summary_Active.xlsx");
+}
+
+// Initial render
+render();
+</script>
+<!-- Postpone Modal -->
+<div id="postponeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999">
+  <div style="
+    background:#fff;
+    width:420px;
+    margin:10% auto;
+    border-radius:12px;
+    padding:20px;
+    box-shadow:0 20px 40px rgba(0,0,0,.2)
+  ">
+    <h3 style="margin-top:0">Postpone Follow-Up</h3>
+
+    <label style="font-size:13px;font-weight:600">Follow-Up Date</label>
+    <input id="modalDate" style="width:100%;padding:10px;margin:6px 0 14px">
+
+    <label style="font-size:13px;font-weight:600">Remark <span style="color:red">*</span></label>
+    <textarea id="modalRemark" rows="3" style="width:100%;padding:10px"></textarea>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
+      <button class="btn btn-ghost" onclick="closePostpone()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePostpone()">Save</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

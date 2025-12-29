@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Login | Implant Operational Governance</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --primary:#2563eb;
+  --primary-dark:#1e40af;
+  --bg:#f8fafc;
+  --border:#e5e7eb;
+  --text:#0f172a;
+  --muted:#64748b;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Inter,system-ui;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(1000px 500px at 10% -10%, #93c5fd33, transparent),
+    linear-gradient(180deg,var(--primary),var(--primary-dark));
+}
+
+/* LOGIN CARD */
+.login-wrapper{
+  width:100%;
+  max-width:380px;
+  padding:20px;
+}
+
+.login-card{
+  background:#fff;
+  border-radius:18px;
+  padding:28px;
+  box-shadow:0 30px 60px rgba(0,0,0,.25);
+}
+
+/* LOGO */
+.logo-box{
+  display:flex;
+  justify-content:center;
+  margin-bottom:16px;
+}
+.logo{
+  width:64px;
+  height:64px;
+  border-radius:18px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:22px;
+  letter-spacing:1px;
+}
+
+/* TITLES */
+h2{
+  margin:0;
+  text-align:center;
+  font-size:22px;
+  font-weight:800;
+}
+.sub{
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+  margin:6px 0 22px;
+}
+
+/* FORM */
+label{
+  font-size:12px;
+  font-weight:700;
+  color:#475569;
+  margin-bottom:4px;
+  display:block;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  font-size:14px;
+  margin-bottom:14px;
+}
+input:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 2px #2563eb22;
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  font-weight:800;
+  font-size:14px;
+  cursor:pointer;
+}
+button:active{transform:scale(.98)}
+
+.error{
+  display:none;
+  background:#fee2e2;
+  color:#dc2626;
+  font-size:13px;
+  padding:8px 10px;
+  border-radius:8px;
+  margin-bottom:12px;
+  text-align:center;
+}
+
+/* FOOTER */
+.footer{
+  text-align:center;
+  margin-top:14px;
+  font-size:11px;
+  color:#e5e7eb;
+  opacity:.8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-wrapper">
+  <div class="login-card">
+
+    <!-- LOGO -->
+    <div class="logo-box">
+      <img src="logo.png" style="width:64px;height:64px">
+
+    </div>
+
+    <h2>Implant Operational Governance</h2>
+    <div class="sub">Login to continue</div>
+
+    <div id="error" class="error">Invalid username or password</div>
+
+    <label>Username</label>
+    <input id="username" placeholder="Enter username">
+
+    <label>Password</label>
+    <input id="password" type="password" placeholder="Enter password">
+
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="footer">
+    © Follow-Up Control System
+  </div>
+</div>
+
+<script>
+const USERS = {
+  admin: { password: "admin123", role: "admin" },
+  user:  { password: "user123", role: "user" }
+};
+
+function login(){
+  const u = username.value.trim();
+  const p = password.value.trim();
+
+  if(!USERS[u] || USERS[u].password !== p){
+    error.style.display = "block";
+    return;
+  }
+
+  localStorage.setItem("loggedInUser", JSON.stringify({
+    username: u,
+    role: USERS[u].role
+  }));
+
+  window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>P1 | Implant Operational Governance</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+if(!session){
+  window.location.href = "login.html";
+}
+</script>
+<style>
+:root{
+  --primary:#2563eb;
+  --primary-dark:#1e40af;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e5e7eb;
+  --text:#0f172a;
+  --muted:#64748b;
+  --danger:#dc2626;
+  --radius:14px;
+  --shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui;
+  background:linear-gradient(180deg,#eef5ff,#f8fafc);
+  color:var(--text);
+}
+
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+  width:270px;
+  background:linear-gradient(180deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  padding:24px 18px;
+  display:flex;flex-direction:column;
+}
+.brand{
+  display:flex;gap:12px;align-items:center;margin-bottom:30px
+}
+.logo{
+  width:44px;height:44px;border-radius:12px;
+  background:#fff;color:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800
+}
+.nav{flex:1}
+.nav a{
+  display:flex;gap:12px;align-items:center;
+  padding:12px 14px;border-radius:10px;
+  text-decoration:none;color:#fff;font-weight:600;
+  opacity:.85;margin-bottom:4px;
+  transition:all 0.2s;
+}
+.nav a.active,.nav a:hover{background:rgba(255,255,255,.2);opacity:1}
+
+/* MAIN CONTENT */
+.main{flex:1;padding:26px;overflow:auto}
+
+.page-header{margin-bottom:20px}
+.page-title{font-size:22px;font-weight:800}
+.page-sub{font-size:13px;color:var(--muted)}
+
+/* KPI CARDS */
+.kpis{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:16px;margin-bottom:22px
+}
+.kpi{
+  background:var(--card);border-radius:var(--radius);
+  padding:18px;box-shadow:var(--shadow)
+}
+.kpi h4{margin:0;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+.kpi .val{font-size:28px;font-weight:800;margin-top:6px;color:var(--primary)}
+
+/* LAYOUT GRID */
+.grid{
+  display:grid;grid-template-columns:360px 1fr;gap:22px
+}
+
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:20px;
+  box-shadow:var(--shadow);
+  margin-bottom:22px
+}
+.card h3{margin:0 0 14px 0;font-size:16px;font-weight:700}
+
+/* FORMS */
+.form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+label{font-size:13px;color:var(--muted);font-weight:600}
+input,select{
+  padding:11px 14px;border-radius:10px;
+  border:1px solid var(--border);font-size:14px;
+  width:100%;transition:border 0.2s;
+}
+input:focus,select:focus{outline:none;border-color:var(--primary)}
+
+/* BUTTONS */
+.btn{
+  padding:10px 16px;border-radius:10px;
+  border:none;font-weight:700;font-size:13px;
+  cursor:pointer;display:inline-flex;gap:8px;align-items:center;
+  transition:transform 0.1s;
+}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-ghost{background:#fff;border:1px solid var(--border);color:var(--primary)}
+.btn-ghost:hover{background:#f8fafc}
+.btn-danger{background:#fee2e2;color:var(--danger)}
+
+/* TABLE */
+.table-wrap{border:1px solid var(--border);border-radius:12px;overflow:auto}
+table{width:100%;border-collapse:collapse}
+thead th{background:#f1f5f9;padding:14px;font-size:12px;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:700}
+tbody td{padding:14px;border-top:1px solid var(--border);font-size:14px;vertical-align:middle}
+
+.summary-row{
+  display:flex;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid var(--border);
+  font-size:13px
+}
+.summary-row:last-child{border:none}
+
+.rack-badge {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 11px;
+  border: 1px solid #dbeafe;
+  display:inline-block;
+}
+
+@media(max-width:1100px){
+  .grid{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo">P1</div>
+    <div>
+      <div style="font-weight:700">Implant Operational Governance</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+
+  <!-- COMPONENT DEPARTMENT -->
+  <div style="margin:14px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+    COMPONENT DEPARTMENT
+  </div>
+
+  <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
+  <a href="page2.html"><i class="fa fa-list-check"></i> Working Summary</a>
+  <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
+  <a href="page4.html"><i class="fa fa-check-circle"></i> Completed</a>
+  <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
+  <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
+
+ <!-- ATTACHMENT DEPARTMENT -->
+<div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+  ATTACHMENT DEPARTMENT
+</div>
+
+<a href="page7.html">
+  <i class="fa fa-paperclip"></i> Attachment DC
+</a>
+
+<a href="page8.html">
+  <i class="fa fa-cubes"></i> Attachment WallDrop
+</a>
+
+
+</nav>
+<button onclick="logout()" style="
+  background:none;
+  border:none;
+  color:#fff;
+  margin-top:20px;
+  font-weight:600;
+  cursor:pointer">
+  <i class="fa fa-sign-out-alt"></i> Logout
+</button>
+
+<script>
+function logout(){
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
+}
+</script>
+
+</aside>
+
+<main class="main">
+
+<div class="page-header">
+  <div class="page-title">Components Follow Up</div>
+  <div class="page-sub">Manage new entries and view rack allocations</div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><h4>Total Active</h4><div class="val" id="kpiTotal">0</div></div>
+  <div class="kpi"><h4>Due Today</h4><div class="val" id="kpiToday">0</div></div>
+  <div class="kpi"><h4>Overdue</h4><div class="val" id="kpiOverdue">0</div></div>
+  <div class="kpi"><h4>Unsaved Draft</h4><div class="val" id="kpiDraft">0</div></div>
+</div>
+
+<div class="grid">
+<section>
+  <div class="card">
+    <h3>Smart Follow-Up Entry</h3>
+    <input type="hidden" id="editId">
+
+    <div class="form-row">
+      <label>Jobcard Number</label>
+      <input id="jobcardInput" placeholder="Enter Jobcard Number" oninput="handleInput()" />
+      <small id="dupWarn" style="display:none;color:var(--danger);font-size:12px;font-weight:600;margin-top:4px">
+        <i class="fa fa-circle-exclamation"></i> Jobcard already exists in active records
+      </small>
+    </div>
+     <div class="form-row">
+  <label>Box Number</label>
+  <input id="boxNumberInput" placeholder="Enter Box Number">
+</div>
+
+    <div class="form-row">
+      <label>Created Timestamp</label>
+      <input id="createdAt" readonly style="background:#f1f5f9;color:#64748b;cursor:not-allowed">
+    </div>
+
+    <div class="form-row">
+      <label>Component Type</label>
+      <select id="typeSelect" onchange="autoFollowDate(); saveDraft()">
+        <option value="">Select Type</option>
+        <option>JIG TRIAL</option>
+<option>ABUTMENT MILLING TRIAL</option>
+<option>COMPONENTS</option>
+<option>NEW MODEL/ NEW SCAN</option>
+<option>METAL TRIAL</option>
+<option>SPECIAL BITE BLOCK</option>
+<option>RESIN TRIAL</option>
+<option>SPECIAL TRAY</option>
+<option>BITE BLOCK</option>
+<option>TEETH SETTING WITH FRAME</option>
+<option>TEETH SET</option>
+<option>OTHERS</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Follow-Up Date (Auto-Calculated)</label>
+      <input id="followDate" placeholder="DD/MM/YYYY HH:MM:SS">
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="submitEntry()" id="saveBtn">
+        <i class="fa fa-check"></i> Save Entry
+      </button>
+      <button class="btn btn-ghost" onclick="resetForm()">Reset</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Follow-Up Date Summary</h3>
+    <div id="dateSummary">No data</div>
+  </div>
+
+  <div class="card">
+    <h3>Type Summary</h3>
+    <div id="typeSummary">No data</div>
+  </div>
+</section>
+
+<section>
+  <div class="card">
+    <h3>Quick Filters</h3>
+    <div id="filterBar" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+      <h3>Active Records</h3>
+      <button class="btn btn-ghost" onclick="exportExcel()">
+        <i class="fa fa-file-excel"></i> Export CSV
+      </button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Jobcard</th>
+            <th>Box No</th>
+            <th>Type</th>
+            <th>Created</th>
+            <th>Rack No</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+// --- CONFIGURATION ---
+const DB_KEY = "furecordsv3";
+const DRAFT_KEY = "p1_draft";
+// --- GLOBAL RACK NAMING (SAME AS WALLDROP) ---
+const TYPE_COLUMN_START = {
+  "JIG TRIAL": 1,
+  "ABUTMENT MILLING TRIAL": 4,
+  "COMPONENTS": 5,
+  "NEW MODEL/ NEW SCAN": 8,
+  "METAL TRIAL": 11,
+  "SPECIAL BITE BLOCK": 14,
+  "RESIN TRIAL": 15,
+  "SPECIAL TRAY": 18,
+  "BITE BLOCK": 21,
+  "TEETH SETTING WITH FRAME": 23,
+  "TEETH SET": 25,
+  "OTHERS": 27
+};
+
+const ROW_LABELS = ['A','B','C','D','E','F'];
+
+
+// Auto-calculation days
+const FOLLOW_DAYS = {
+  "JIG TRIAL": 1,
+  "ABUTMENT MILLING TRIAL": 1,
+  "COMPONENTS": 3,
+  "NEW MODEL/ NEW SCAN": 1,
+  "METAL TRIAL": 3,
+  "SPECIAL BITE BLOCK": 1,
+  "RESIN TRIAL": 1,
+  "SPECIAL TRAY": 1,
+  "BITE BLOCK": 1,
+  "TEETH SETTING WITH FRAME": 3,
+  "TEETH SET": 3,
+  "OTHERS": 1
+};
+
+
+// Rack Logic: Rack 1-2 (30 items), Rack 3-12 (36 items)
+const RACK_CAPACITIES = [30, 30, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36];
+
+// --- STATE MANAGEMENT ---
+let records = JSON.parse(localStorage.getItem(DB_KEY) || "[]");
+let activeFilter = "";
+
+// --- UTILITIES ---
+const pad = n => n.toString().padStart(2,"0");
+
+function formatDT(d){
+  if(typeof d === 'string') d = new Date(d);
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function parseDate(str){
+  if(!str) return null;
+  const p=str.split(" ")[0].split("/");
+  return new Date(p[2],p[1]-1,p[0]);
+}
+// SAME COLUMN LOGIC AS WALLDROP
+const TYPE_COLUMNS = {
+  "JIG TRIAL": 3,
+  "ABUTMENT MILLING TRIAL": 1,
+  "COMPONENTS": 4,           // 🔥 MATCH WALLDROP
+  "NEW MODEL/ NEW SCAN": 2,
+  "METAL TRIAL": 3,
+  "SPECIAL BITE BLOCK": 1,
+  "RESIN TRIAL": 3,
+  "SPECIAL TRAY": 2,
+  "BITE BLOCK": 2,
+  "TEETH SETTING WITH FRAME": 2,
+  "TEETH SET": 2,
+  "OTHERS": 1
+};
+
+// --- GLOBAL RACK NAME CALCULATOR ---
+function getGlobalRackName(type, index){
+  const start = TYPE_COLUMN_START[type] || 1;
+  const columns = TYPE_COLUMNS[type] || 3;
+
+  const col = index % columns;
+  const row = Math.floor(index / columns);
+
+  if (row >= ROW_LABELS.length) return "—";
+
+  return `${start + col}${ROW_LABELS[row]}`;
+}
+
+
+// --- RACK LOGIC ---
+function calculateRack(index) {
+  let cumulativeCap = 0;
+  for (let i = 0; i < RACK_CAPACITIES.length; i++) {
+    cumulativeCap += RACK_CAPACITIES[i];
+    if (index < cumulativeCap) {
+      return i + 1; // Rack numbers are 1-based
+    }
+  }
+  return "Full";
+}
+
+// --- FORM HANDLERS ---
+function handleInput() {
+  checkDuplicate();
+  if(!createdAt.value) createdAt.value = formatDT(new Date());
+  saveDraft();
+}
+
+function autoFollowDate(){
+  const t = typeSelect.value;
+  if(!t) return;
+  const d = new Date();
+  d.setDate(d.getDate() + (FOLLOW_DAYS[t] || 1));
+  followDate.value = formatDT(d);
+}
+
+function checkDuplicate(){
+  const job = jobcardInput.value.trim();
+  const exists = records.some(r => r.jobcard === job && r.status !== 'Completed');
+  dupWarn.style.display = exists ? "block" : "none";
+  return exists;
+}
+
+// --- DRAFT FEATURE ---
+function saveDraft(){
+  if(!jobcardInput.value && !typeSelect.value) {
+    localStorage.removeItem(DRAFT_KEY);
+  } else {
+    const draft = {
+      jobcard: jobcardInput.value,
+      type: typeSelect.value,
+      created: createdAt.value,
+      follow: followDate.value
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }
+  renderKPIs();
+}
+
+function loadDraft(){
+  const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
+  if(draft){
+    jobcardInput.value = draft.jobcard || "";
+    typeSelect.value = draft.type || "";
+    createdAt.value = draft.created || "";
+    followDate.value = draft.follow || "";
+    if(draft.jobcard) checkDuplicate();
+  }
+}
+
+// --- CRUD OPERATIONS ---
+function submitEntry(){
+  const job = jobcardInput.value.trim();
+  const type = typeSelect.value;
+  const id = editId.value;
+
+  if(!job || !type) return alert("Please enter Jobcard and select Type");
+  if(!id && checkDuplicate()) return alert("This Jobcard already exists in active records.");
+
+  if(id){
+    // Update existing
+    const i = records.findIndex(r => r.id === id);
+    if(i > -1){
+  records[i].jobcard = job;
+  records[i].boxNumber = boxNumberInput.value.trim(); // ✅ HERE
+  records[i].type = type;
+  records[i].todayFollow = followDate.value;
+}
+  } else {
+    // Create new
+    records.unshift({
+  id: Date.now().toString(),
+  jobcard: job,
+  boxNumber: boxNumberInput.value.trim(), // ✅ NEW
+  type: type,
+  timestamp: createdAt.value,
+  todayFollow: followDate.value,
+  status: "Active"
+});
+
+  }
+
+  localStorage.setItem(DB_KEY, JSON.stringify(records));
+  localStorage.removeItem(DRAFT_KEY); // Clear draft on success
+  resetForm();
+  renderAll();
+}
+
+function editEntry(id){
+  const r = records.find(x => x.id === id);
+  if(!r) return;
+  editId.value = r.id;
+  jobcardInput.value = r.jobcard;
+  boxNumberInput.value = r.boxNumber || "";
+  typeSelect.value = r.type;
+  followDate.value = r.todayFollow;
+  createdAt.value = r.timestamp;
+  saveBtn.innerHTML = '<i class="fa fa-rotate"></i> Update Entry';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm(){
+  editId.value = "";
+  jobcardInput.value = "";
+  boxNumberInput.value = "";
+  typeSelect.value = "";
+  followDate.value = "";
+  createdAt.value = "";
+  dupWarn.style.display = "none";
+  saveBtn.innerHTML = '<i class="fa fa-check"></i> Save Entry';
+  localStorage.removeItem(DRAFT_KEY);
+  renderKPIs();
+}
+
+function remove(id){
+  if(confirm("Permanently delete this record?")){
+    records = records.filter(r => r.id !== id);
+    localStorage.setItem(DB_KEY, JSON.stringify(records));
+    renderAll();
+  }
+}
+
+// --- RENDERING ---
+function renderTable(){
+  tableBody.innerHTML = "";
+  
+  // Filter active records only (Completed ones move to Page 4)
+  const activeRecords = records.filter(r => r.status !== 'Completed');
+
+  activeRecords
+    .filter(r => !activeFilter || r.type === activeFilter)
+    .forEach(r => {
+      // Calculate Rack: Logic must match Page 6
+      // 1. Get all active items of this specific type
+      const sameType = activeRecords.filter(item => item.type === r.type);
+      
+      // 2. Sort them Oldest to Newest to assign Rack 1 to the oldest item
+      const chronological = [...sameType].reverse();
+      
+      // 3. Find index of current item in that chronological list
+      const typeIndex = chronological.findIndex(item => item.id === r.id);
+      
+      // 4. Calculate Rack
+      const rackName = getGlobalRackName(r.type, typeIndex);
+
+
+      tableBody.innerHTML += `
+      <tr>
+        <td><b>${r.jobcard}</b></td>
+<td>${r.boxNumber || "-"}</td>
+<td>${r.type}</td>
+<td>${r.timestamp}</td>
+
+        <td><span class="rack-badge">${rackName}</span></td>
+        <td style="text-align:right">
+          <button class="btn btn-ghost" onclick="editEntry('${r.id}')" title="Edit"><i class="fa fa-pen"></i></button>
+          <button class="btn btn-danger" onclick="remove('${r.id}')" title="Delete"><i class="fa fa-trash"></i></button>
+        </td>
+      </tr>`;
+    });
+}
+
+function renderFilters(){
+  const types = [...new Set(records.filter(r=>r.status!=='Completed').map(r => r.type))];
+  filterBar.innerHTML = 
+    `<span class="btn ${activeFilter===''?'btn-primary':'btn-ghost'}" onclick="setFilter('')">All</span>` +
+    types.map(t => `<span class="btn ${activeFilter===t?'btn-primary':'btn-ghost'}" onclick="setFilter('${t}')">${t}</span>`).join("");
+}
+
+function setFilter(t){ activeFilter = t; renderAll(); }
+
+function renderDateSummary(){
+  const map = {};
+  records.filter(r=>r.status!=='Completed').forEach(r => {
+    if(!r.todayFollow) return;
+    const d = r.todayFollow.split(" ")[0];
+    map[d] = (map[d] || 0) + 1;
+  });
+  dateSummary.innerHTML = Object.entries(map)
+    .map(([d, c]) => `<div class="summary-row"><span>${d}</span><b>${c}</b></div>`).join("") || "No active data";
+}
+
+function renderTypeSummary(){
+  const map = {};
+  records.filter(r=>r.status!=='Completed').forEach(r => map[r.type] = (map[r.type] || 0) + 1);
+  typeSummary.innerHTML = Object.entries(map)
+    .map(([t, c]) => `<div class="summary-row"><span>${t}</span><b>${c}</b></div>`).join("") || "No active data";
+}
+
+function renderKPIs(){
+  let today = 0, overdue = 0;
+  const now = new Date(); now.setHours(0,0,0,0);
+  
+  const active = records.filter(r => r.status !== 'Completed');
+
+  active.forEach(r => {
+    const d = parseDate(r.todayFollow);
+    if(!d) return;
+    d.setHours(0,0,0,0);
+    if(d.getTime() === now.getTime()) today++;
+    if(d < now) overdue++;
+  });
+
+  kpiTotal.innerText = active.length;
+  kpiToday.innerText = today;
+  kpiOverdue.innerText = overdue;
+  kpiDraft.innerText = localStorage.getItem(DRAFT_KEY) ? 1 : 0;
+}
+
+function exportExcel(){
+  const ws = XLSX.utils.json_to_sheet(
+  records.filter(r=>r.status!=='Completed').map(r => ({
+    Jobcard: r.jobcard,
+    BoxNumber: r.boxNumber || "",
+    Type: r.type,
+    Created: r.timestamp,
+    FollowUp: r.todayFollow,
+    Status: r.status
+  }))
+);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Active_FollowUps");
+  XLSX.writeFile(wb, "Active_FollowUp_Report.xlsx");
+}
+
+function renderAll(){
+  renderKPIs();
+  renderFilters();
+  renderTable();
+  renderDateSummary();
+  renderTypeSummary();
+}
+
+// Initialize
+loadDraft();
+renderAll();
+</script>
+
+</main>
+</div>
+</body>
+</html>
