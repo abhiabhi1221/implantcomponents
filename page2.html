@@ -8,99 +8,140 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBJrlHhf-g-PgL7l_ZRFDCp-vzfHT1mj5Q",
+    authDomain: "implant-governance.firebaseapp.com",
+    projectId: "implant-governance",
+    storageBucket: "implant-governance.firebasestorage.app",
+    messagingSenderId: "649955056666",
+    appId: "1:649955056666:web:02338c5bda4f285e8045a3"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
 <script>
 const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
-
-// Not logged in → go to login
-if (!session) {
-  window.location.href = "login.html";
-}
-
-// User role → NO access to Completed page
-if (session.role === "user") {
-  window.location.href = "index.html";
-}
+if (!session) { window.location.href = "login.html"; }
 </script>
-<script>
-if (!session) {
-  window.location.href = "login.html";
-}
 
-// 🚫 BLOCK USER ROLE FROM ANALYTICS
-if (session.role === "user") {
-  window.location.href = "index.html";
-}
-</script>
 <style>
-:root{
-  --primary:#2563eb; --primary-dark:#1e40af; --bg:#f8fafc; --card:#ffffff;
-  --border:#e5e7eb; --text:#0f172a; --muted:#64748b; --danger:#dc2626;
-  --radius:14px; --shadow:0 10px 25px rgba(0,0,0,.08);
+/* --- THEME VARIABLES --- */
+:root {
+  --primary: #2563eb; --primary-dark: #1e40af; --bg: #f8fafc; --card: #ffffff;
+  --border: #e5e7eb; --text: #0f172a; --muted: #64748b; --danger: #dc2626;
+  --success: #10b981; --warning: #f59e0b; --info: #3b82f6;
+  --radius: 14px; --shadow: 0 10px 25px rgba(0,0,0,.08);
 }
-*{box-sizing:border-box}
-body{
-  margin:0; font-family:Inter,system-ui;
-  background:linear-gradient(180deg,#eef5ff,#f8fafc); color:var(--text);
+
+* { box-sizing: border-box; outline: none; }
+body { margin: 0; font-family: Inter, system-ui; background: linear-gradient(180deg, #eef5ff, #f8fafc); color: var(--text); }
+.app { display: flex; min-height: 100vh; }
+
+/* --- SIDEBAR --- */
+.sidebar { width: 270px; background: linear-gradient(180deg, var(--primary), var(--primary-dark)); color: #fff; padding: 24px 18px; display: flex; flex-direction: column; }
+.brand { display: flex; gap: 12px; align-items: center; margin-bottom: 30px; }
+.logo { width: 44px; height: 44px; border-radius: 12px; background: #fff; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+.nav { flex: 1; }
+.nav a { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 10px; text-decoration: none; color: #fff; font-weight: 600; opacity: .85; margin-bottom: 4px; transition: 0.2s; }
+.nav a.active, .nav a:hover { background: rgba(255,255,255,.2); opacity: 1; }
+.btn-sidebar { width: 100%; text-align: left; background: rgba(255,255,255,0.1); border: none; color: #ff8a8a; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
+.btn-sidebar:hover { background: rgba(255,255,255,0.2); color: white; }
+
+/* Text-only button styling */
+.btn-complete { 
+  background: #dcfce7; 
+  color: #166534; 
+  border: 1px solid #bbf7d0; 
 }
-.app{display:flex; min-height:100vh}
 
-/* SIDEBAR */
-.sidebar{
-  width:270px; background:linear-gradient(180deg,var(--primary),var(--primary-dark));
-  color:#fff; padding:24px 18px; display:flex; flex-direction:column;
+.btn-postpone { 
+  background: #dbeafe; 
+  color: #1e40af; 
+  border: 1px solid #bfdbfe; 
 }
-.brand{display:flex; gap:12px; align-items:center; margin-bottom:30px}
-.logo{
-  width:44px; height:44px; border-radius:12px; background:#fff; color:var(--primary);
-  display:flex; align-items:center; justify-content:center; font-weight:800
+
+/* Ensure buttons have enough padding for text */
+.btn {
+  padding: 8px 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
-.nav{flex:1}
-.nav a{
-  display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:10px;
-  text-decoration:none; color:#fff; font-weight:600; opacity:.85; margin-bottom:4px; transition:0.2s;
-}
-.nav a.active, .nav a:hover{background:rgba(255,255,255,.2); opacity:1}
 
-/* MAIN CONTENT */
-.main{flex:1; padding:26px; overflow:auto}
-.page-header{margin-bottom:20px}
-.page-title{font-size:22px; font-weight:800}
+/* --- MAIN CONTENT --- */
+.main { flex: 1; padding: 26px; overflow: hidden; display: flex; flex-direction: column; }
+.page-header { margin-bottom: 20px; flex-shrink: 0; }
+.page-title { font-size: 22px; font-weight: 800; }
 
-/* KPI CARDS */
-.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px}
-.kpi{
-  background:var(--card); border-radius:var(--radius); padding:18px; 
-  box-shadow:var(--shadow); cursor:pointer; border:2px solid transparent; transition:0.2s;
-}
-.kpi:hover{transform:translateY(-3px); border-color:var(--primary)}
-.kpi.active{border-color:var(--primary); background:#f0f7ff}
-.kpi h4{margin:0; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px}
-.kpi .val{font-size:28px; font-weight:800; margin-top:6px; color:var(--primary)}
+/* --- KPI CARDS --- */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; flex-shrink: 0; }
+.kpi { background: var(--card); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+.kpi:hover { transform: translateY(-3px); border-color: var(--primary); }
+.kpi.active { border-color: var(--primary); background: #f0f7ff; }
+.kpi h4 { margin: 0; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi .val { font-size: 28px; font-weight: 800; margin-top: 6px; color: var(--primary); }
 
-/* TABLE & CARDS */
-.card{background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); margin-bottom:22px}
-.table-wrap{border:1px solid var(--border); border-radius:12px; overflow:hidden}
-table{width:100%; border-collapse:collapse}
-thead th{background:#f1f5f9; padding:14px; font-size:12px; text-transform:uppercase; color:var(--muted); text-align:left; font-weight:700}
-tbody td{padding:14px; border-top:1px solid var(--border); font-size:14px; vertical-align:middle}
+/* --- CARD & TABLE --- */
+.card { background: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+.table-wrap { border: 1px solid var(--border); border-radius: 12px; overflow: auto; flex: 1; position: relative; }
+table { width: 100%; border-collapse: collapse; min-width: 1000px; }
 
-/* BUTTONS */
-.btn{
-  padding:8px 12px; border-radius:8px; border:none; font-weight:700; font-size:11px;
-  cursor:pointer; display:inline-flex; gap:4px; align-items:center; transition:transform 0.1s;
-}
-.btn:active{transform:scale(0.98)}
-.btn-ghost{background:#fff; border:1px solid var(--border); color:var(--primary)}
-.btn-primary{background:var(--primary); color:#fff}
-.btn-danger{background:#fee2e2; color:var(--danger)}
+/* STICKY HEADER */
+thead th { background: #f1f5f9; padding: 14px; font-size: 12px; text-transform: uppercase; color: var(--muted); text-align: left; font-weight: 700; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); }
+tbody td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+tbody tr:hover { background: #f8fafc; }
 
-/* REMARK BOX */
-.expand-btn{cursor:pointer; color:var(--primary); transition:0.3s; margin-right:8px}
-.remark-row{background:#f9fafb}
-.remark-box{padding:12px 40px; border-left:4px solid var(--primary); font-size:13px; color:#475569}
-.hidden{display:none}
+/* --- BUTTONS --- */
+.btn { padding: 8px 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 11px; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; transition: transform 0.1s; }
+.btn:active { transform: scale(0.98); }
+.btn-ghost { background: #fff; border: 1px solid var(--border); color: var(--primary); }
+.btn-ghost:hover { background: #f1f5f9; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-danger { background: #fee2e2; color: var(--danger); }
 
-@media(max-width:1000px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+/* --- STATUS BADGES --- */
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+/* Backlog = RED */
+.badge-red { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+/* Active = GREEN */
+.badge-green { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+/* Postponed = BLUE */
+.badge-blue { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+
+/* --- EXTRAS --- */
+.expand-btn { cursor: pointer; color: var(--primary); transition: 0.3s; margin-right: 8px; width: 20px; text-align: center; }
+.remark-row { background: #f9fafb; display: none; }
+.remark-row.show { display: table-row; animation: fadeIn 0.3s; }
+.remark-box { padding: 12px 20px; border-left: 4px solid var(--primary); font-size: 13px; color: #475569; margin: 10px 20px; background: white; border-radius: 0 8px 8px 0; border: 1px solid var(--border); }
+.remark-entry { border-bottom: 1px dashed var(--border); padding-bottom: 6px; margin-bottom: 6px; }
+.remark-entry:last-child { border: none; margin: 0; padding: 0; }
+.remark-time { font-size: 10px; font-weight: 700; color: var(--muted); margin-right: 6px; }
+
+/* --- MODAL --- */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; backdrop-filter: blur(2px); align-items: center; justify-content: center; }
+.modal { background: #fff; width: 420px; border-radius: 12px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,.2); animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.form-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 14px; font-family: inherit; }
+.form-input:focus { border-color: var(--primary); outline: none; }
+
+/* --- TOAST --- */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+.toast { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; min-width: 300px; border-left: 4px solid var(--primary); transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+.toast.show { transform: translateX(0); }
+.toast-success { border-color: var(--success); } .toast-success i { color: var(--success); }
+.toast-error { border-color: var(--danger); } .toast-error i { color: var(--danger); }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@media(max-width:1100px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 
@@ -109,55 +150,33 @@ tbody td{padding:14px; border-top:1px solid var(--border); font-size:14px; verti
   <aside class="sidebar">
     <div class="brand">
       <div class="logo">P2</div>
-      <div>
-        <div style="font-weight:700">Implant Operational Governance</div>
-        <div style="font-size:12px;opacity:.8">Control</div>
-      </div>
+      <div><div style="font-weight:700">Implant Governance</div><div style="font-size:12px;opacity:.8">Operational Control</div></div>
     </div>
-   
-  <nav class="nav">
-
-  <!-- COMPONENT DEPARTMENT -->
-  <div style="margin:14px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
-    COMPONENT DEPARTMENT
-  </div>
-
-  <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
-  <a href="page2.html"><i class="fa fa-list-check"></i> Working Summary</a>
-  <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
-  <a href="page4.html"><i class="fa fa-check-circle"></i> Completed</a>
-  <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
-  <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
-
-  <!-- ATTACHMENT DEPARTMENT -->
-<div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
-  ATTACHMENT DEPARTMENT
-</div>
-
-<a href="page7.html">
-  <i class="fa fa-paperclip"></i> Attachment DC
-</a>
-
-<a href="page8.html">
-  <i class="fa fa-cubes"></i> Attachment WallDrop
-</a>
-
-<button onclick="logout()" style="
-  background:none;
-  border:none;
-  color:#fff;
-  margin-top:20px;
-  font-weight:600;
-  cursor:pointer">
-  <i class="fa fa-sign-out-alt"></i> Logout
-</button>
-</nav>
+    <nav class="nav">
+      <div style="margin:14px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">COMPONENT DEPT</div>
+      <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
+      <a href="page2.html" class="active"><i class="fa fa-list-check"></i> Working Summary</a>
+      <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
+      <a href="page4.html"><i class="fa fa-check-circle"></i> Completed</a>
+      <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
+      <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
+      <div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">ATTACHMENT DEPT</div>
+      <a href="page7.html"><i class="fa fa-paperclip"></i> Attachment DC</a>
+      <a href="page8.html"><i class="fa fa-cubes"></i> Attachment WallDrop</a>
+      
+      <div style="margin-top:auto; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1)">
+        <button class="btn-sidebar" onclick="clearDatabase()">
+          <i class="fa fa-trash-can"></i> Clear Database
+        </button>
+        <button onclick="logout()" style="background:none;border:none;color:#fff;width:100%;font-weight:600;cursor:pointer;text-align:left;padding:10px">
+          <i class="fa fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </nav>
   </aside>
 
   <main class="main">
-    <div class="page-header">
-      <div class="page-title">Active Working Summary</div>
-    </div>
+    <div class="page-header"><div class="page-title">Active Working Summary</div></div>
 
     <div class="kpis">
       <div class="kpi active" id="kpi-Total" onclick="setFilter('Total')"><h4>Total Active</h4><div class="val" id="kTotal">0</div></div>
@@ -168,32 +187,24 @@ tbody td{padding:14px; border-top:1px solid var(--border); font-size:14px; verti
 
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
-  <h3 id="table-title">Follow-Up Records</h3>
-
-  <div style="display:flex;gap:10px;align-items:center">
-    <input
-      id="searchInput"
-      placeholder="Search Jobcard / Type..."
-      oninput="render()"
-      style="
-        padding:8px 12px;
-        border-radius:8px;
-        border:1px solid var(--border);
-        font-size:13px;
-        min-width:220px
-      "
-    >
-    <button class="btn btn-primary" onclick="exportActiveToExcel()">
-      <i class="fa fa-file-excel"></i> Export Excel
-    </button>
-  </div>
-</div>
+        <h3 style="margin:0;font-size:16px;font-weight:700">Follow-Up Records</h3>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div style="position:relative">
+            <i class="fa fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)"></i>
+            <input id="searchInput" placeholder="Search Jobcard / Box / Type..." oninput="render()" style="padding:8px 8px 8px 30px;border-radius:8px;border:1px solid var(--border);font-size:13px;min-width:240px">
+          </div>
+          <button class="btn btn-primary" onclick="exportToExcel()"><i class="fa fa-file-excel"></i> Export</button>
+        </div>
+      </div>
 
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
+              <th style="width:40px"></th>
               <th>Jobcard</th>
+              <th>SO Number</th>
+              <th>Box No</th>
               <th>Type</th>
               <th>Follow-Up Date</th>
               <th>Status</th>
@@ -202,37 +213,81 @@ tbody td{padding:14px; border-top:1px solid var(--border); font-size:14px; verti
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
+        <div id="emptyState" style="text-align:center;padding:40px;color:var(--muted);display:none">
+          <i class="fa fa-box-open" style="font-size:30px;opacity:0.5;margin-bottom:10px"></i><br>No records found
+        </div>
       </div>
     </div>
   </main>
 </div>
 
+<div id="postponeModal" class="modal-overlay">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+      <h3 style="margin:0">Postpone Follow-Up</h3>
+      <i class="fa fa-times" onclick="closeModal('postponeModal')" style="cursor:pointer"></i>
+    </div>
+    <div id="postponeInfo" style="background:#eff6ff;padding:10px;border-radius:8px;font-size:12px;color:var(--primary-dark);margin-bottom:15px;border:1px solid #dbeafe"></div>
+    
+    <label class="form-label">Next Follow-Up Date</label>
+    <input id="modalDate" class="form-input" type="date">
+
+    
+    <label class="form-label">Reason <span style="color:var(--danger)">*</span></label>
+    <textarea id="modalRemark" rows="3" class="form-input" placeholder="Enter reason for postponing..."></textarea>
+    
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn btn-ghost" onclick="closeModal('postponeModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmPostpone()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div id="remarkModal" class="modal-overlay">
+  <div class="modal">
+    <h3 style="margin-top:0">Add Remark</h3>
+    <textarea id="simpleRemarkInput" rows="4" class="form-input" placeholder="Enter note..."></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn btn-ghost" onclick="closeModal('remarkModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmRemark()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
 <script>
 // --- CONFIGURATION ---
 const DB = "furecordsv3";
-const COMPLETED_DB = "completed_data_v3";
-const DELETE_DB = "delete_logs_v3";
+const DELETED_DB = "delete_logs_v3";
 
-// Sequence of postpone days per type
 const TYPE_LIMITS = {
-  "METAL":[3,7,15,30,45,60],
-  "SPECIAL BITE BLOCK":[1,3,7,30,60],
-  "BITE BLOCK":[1,3,7,30,60],
-  "SPECIAL TRAY":[1,7,15,30,60],
-  "JIG":[1,3,7,30,60],
-  "TEETH SETTING WITH FRAME":[3,7,15,30,60],
-  "TEETH SET":[3,7,15,30,60],
-  "BODY TRIAL":[1,3,7,15,60],
-  "ABUTMENT MILLING TRIAL":[1,3,7,30,60],
-  "RESINTRVAL":[1,3,7,30,60],
-  "COMPONENTS":[3,7,15,30,60]
+  "METAL TRIAL": [7, 15, 30, 45, 60],
+  "SPECIAL BITE BLOCK": [3, 7, 30, 60],
+  "BITE BLOCK": [3, 7, 30, 60],
+  "SPECIAL TRAY": [7, 15, 30, 60],
+  "JIG TRIAL": [3, 7, 30, 60],
+  "TEETH SETTING WITH FRAME": [7, 15, 30, 60],
+  "TEETH SET": [7, 15, 30, 60],
+  "BODY TRIAL": [3, 7, 15, 60],
+  "ABUTMENT MILLING TRIAL": [3, 7, 30, 60],
+  "RESIN TRIAL": [3, 7, 30, 60],
+  "COMPONENTS": [7, 15, 30, 60],
+  "DEFAULT": [3, 7, 15, 30]
 };
 
 // --- STATE ---
-let records = JSON.parse(localStorage.getItem(DB) || "[]");
-let currentFilter = 'Total';
-let postponeTargetId = null;
+let records = [];
 
+db.collection("records")
+  .onSnapshot(snapshot => {
+    records = [];
+    snapshot.forEach(doc => records.push(doc.data()));
+    render();
+  });
+
+let currentFilter = 'Total';
+let editingId = null;
 
 // --- UTILS ---
 const pad = n => n.toString().padStart(2,"0");
@@ -244,10 +299,120 @@ function parseDate(str){
 function formatDT(d){ 
   return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; 
 }
-function addDays(str, days){ 
-  const d = parseDate(str); 
-  d.setDate(d.getDate() + days); 
-  return formatDT(d); 
+function addDays(dateStr, days) {
+  const d = parseDate(dateStr);
+  d.setDate(d.getDate() + days);
+  const timePart = dateStr.split(" ")[1] || "09:00:00";
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${timePart}`;
+}
+
+// --- TOAST NOTIFICATIONS ---
+function showToast(msg, type = 'success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<i class="fa ${type==='success'?'fa-check-circle':'fa-exclamation-circle'}"></i> <span>${msg}</span>`;
+  c.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+// --- RENDER LOGIC ---
+function render(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const activeRecords = records.filter(r => r.status !== "Completed");
+  
+  let counts = {Total: activeRecords.length, Today: 0, Upcoming: 0, Backlog: 0};
+  
+  // Sort: Backlog > Today > Upcoming
+  activeRecords.sort((a,b) => parseDate(a.todayFollow) - parseDate(b.todayFollow));
+
+  // Count KPIs
+  activeRecords.forEach(r => {
+    const d = parseDate(r.todayFollow);
+    if(d) {
+      d.setHours(0,0,0,0);
+      if(d.getTime() === now.getTime()) counts.Today++;
+      else if(d < now) counts.Backlog++;
+      else counts.Upcoming++;
+    }
+  });
+
+  // Update KPI DOM
+  document.getElementById('kTotal').innerText = counts.Total;
+  document.getElementById('kToday').innerText = counts.Today;
+  document.getElementById('kUpcoming').innerText = counts.Upcoming;
+  document.getElementById('kBacklog').innerText = counts.Backlog;
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = "";
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let hasData = false;
+
+  activeRecords.forEach(r => {
+    // 1. Calculate Status for display
+    const d = parseDate(r.todayFollow);
+    let rowType = 'Upcoming'; 
+    let badgeHtml = "";
+
+    // -- LOGIC FOR STATUS --
+    if(r.status === 'Postponed') {
+        // BLUE
+        badgeHtml = `<span class="badge badge-blue"><i class="fa fa-clock"></i> Postponed</span>`;
+        // KPI counting logic remains based on date, or handled separately? 
+        // Typically postponed items have a future date, so they fall into 'Upcoming' usually.
+    } else if(d) {
+        d.setHours(0,0,0,0);
+        if(d < now) {
+            // RED
+            rowType = 'Backlog';
+            badgeHtml = `<span class="badge badge-red"><i class="fa fa-triangle-exclamation"></i> Backlog</span>`;
+        } else {
+            // GREEN (Includes Today and Future)
+            if(d.getTime() === now.getTime()) rowType = 'Today';
+            badgeHtml = `<span class="badge badge-green"><i class="fa fa-circle-check"></i> Active</span>`;
+        }
+    }
+
+    // 2. Filter Logic
+    if(currentFilter !== 'Total' && currentFilter !== rowType && !(currentFilter === 'Backlog' && rowType === 'Backlog')) return;
+    
+    // 3. Search Logic
+    if (q && !r.jobcard.toLowerCase().includes(q) && 
+        !r.type.toLowerCase().includes(q) && 
+        !(r.soNumber && r.soNumber.toLowerCase().includes(q)) &&
+        !(r.boxNumber && r.boxNumber.toLowerCase().includes(q))) return;
+
+    hasData = true;
+
+    // 4. Render Row
+    tbody.innerHTML += `
+      <tr>
+        <td><i id="icon-${r.id}" class="fa fa-chevron-right expand-btn" onclick="toggleRow('${r.id}')"></i></td>
+        <td><b>${r.jobcard}</b></td>
+        <td style="color:var(--primary);font-weight:700">${r.soNumber || "-"}</td>
+        <td><span style="font-family:monospace;background:#f1f5f9;padding:2px 6px;border-radius:4px">${r.boxNumber || "-"}</span></td>
+        <td>${r.type}</td>
+        <td>${r.todayFollow}</td>
+        <td>${badgeHtml}</td>
+        <td style="text-align:right">
+          <button class="btn btn-ghost" title="Add Note" onclick="openRemark('${r.id}')"><i class="fa fa-comment-dots"></i></button>
+         <button class="btn btn-postpone" title="Postpone" onclick="openPostpone('${r.id}')">Postponed</button>
+          <button class="btn btn-complete" title="Complete" onclick="complete('${r.id}')">Completed</button>
+          <button class="btn btn-danger" title="Delete" onclick="del('${r.id}')"><i class="fa fa-trash"></i></button>
+        </td>
+      </tr>
+      <tr id="row-${r.id}" class="remark-row">
+        <td colspan="8">
+          <div class="remark-box">
+            <div style="font-weight:700;margin-bottom:8px;color:var(--primary)">Remark History</div>
+            ${r.remark || "<span style='font-style:italic;opacity:0.7'>No remarks yet.</span>"}
+          </div>
+        </td>
+      </tr>`;
+  });
+
+  document.getElementById('emptyState').style.display = hasData ? 'none' : 'block';
 }
 
 // --- ACTIONS ---
@@ -261,199 +426,149 @@ function setFilter(f){
 function toggleRow(id){
   const row = document.getElementById('row-'+id);
   const icon = document.getElementById('icon-'+id);
-  row.classList.toggle('hidden');
-  icon.classList.toggle('fa-chevron-down');
-  icon.classList.toggle('fa-chevron-right');
-}
-
-function addRemark(id){
-  const r = records.find(x => x.id === id);
-  const v = prompt("Enter Remark");
-  if(!v) return;
-
-  const ts = formatDT(new Date());
-  r.remark = (r.remark || "") + `<div>• ${ts} — ${v}</div>`;
-
-
-  save();
-}
-
-function postpone(id){
-  const r = records.find(x => x.id === id);
-  postponeTargetId = id;
-
-  document.getElementById("modalDate").value = r.todayFollow.split(" ")[0];
-  document.getElementById("modalRemark").value = "";
-
-  document.getElementById("postponeModal").style.display = "block";
-}
-function closePostpone(){
-  document.getElementById("postponeModal").style.display = "none";
-  postponeTargetId = null;
-}
-
-function savePostpone(){
-  const r = records.find(x => x.id === postponeTargetId);
-  if(!r) return;
-
-  const newDate = document.getElementById("modalDate").value;
-  const remark = document.getElementById("modalRemark").value.trim();
-
-  if(!remark){
-    alert("Remark is required");
-    return;
+  if(row.classList.contains('show')) {
+    row.classList.remove('show');
+    icon.className = 'fa fa-chevron-right expand-btn';
+  } else {
+    row.classList.add('show');
+    icon.className = 'fa fa-chevron-down expand-btn';
   }
-
-  // Preserve original time
-  const time = r.todayFollow.split(" ")[1];
-  r.todayFollow = newDate + " " + time;
-
-  // Append remark history
-  const ts = formatDT(new Date());
-r.remark = (r.remark || "") + `<div>• ${ts} — (Postpone) ${remark}</div>`;
-
-
-  r.status = "Postponed";
-
-  save();
-  closePostpone();
 }
 
+// Postpone Logic
+function openPostpone(id){
+  editingId = id;
+  const r = records.find(x => x.id === id);
+  const count = r.postponeCount || 0;
+  const limits = TYPE_LIMITS[r.type] || TYPE_LIMITS["DEFAULT"];
+  const daysToAdd = limits[Math.min(count, limits.length - 1)];
+  const nextDate = addDays(r.todayFollow, daysToAdd);
+  
+  document.getElementById("postponeInfo").innerHTML = `<b>${r.type}</b><br>Postpone #${count + 1} &rarr; Adding <b>${daysToAdd} days</b>`;
+  const dateOnly = nextDate.split(" ")[0].split("/").reverse().join("-");
+document.getElementById("modalDate").value = dateOnly;
 
+  document.getElementById("modalRemark").value = "";
+  document.querySelector(".modal-overlay#postponeModal").style.display = "flex";
+}
 
+function confirmPostpone(){
+  const r = records.find(x => x.id === editingId);
+  const remark = document.getElementById("modalRemark").value.trim();
+  if(!remark){ showToast("Reason required", "error"); return; }
+  
+  const selectedDate = document.getElementById("modalDate").value;
+const oldTime = r.todayFollow.split(" ")[1] || "09:00:00";
+
+// Convert YYYY-MM-DD → DD/MM/YYYY
+const d = selectedDate.split("-");
+const formattedDate = `${d[2]}/${d[1]}/${d[0]}`;
+
+r.todayFollow = `${formattedDate} ${oldTime}`;
+
+  r.postponeCount = (r.postponeCount || 0) + 1;
+  r.status = "Postponed";
+  
+  const ts = formatDT(new Date());
+  r.remark = (r.remark || "") + `<div class="remark-entry"><span class="remark-time">${ts}</span> [Postponed] ${remark}</div>`;
+  
+  save(r)
+  .then(() => {
+    closeModal('postponeModal');
+    showToast("Follow-up Postponed");
+  });
+
+ 
+}
+
+// Remark Logic
+function openRemark(id){
+  editingId = id;
+  document.getElementById("simpleRemarkInput").value = "";
+  document.querySelector(".modal-overlay#remarkModal").style.display = "flex";
+}
+
+function confirmRemark(){
+  const r = records.find(x => x.id === editingId);
+  const txt = document.getElementById("simpleRemarkInput").value.trim();
+  if(!txt) return;
+  
+  const ts = formatDT(new Date());
+  r.remark = (r.remark || "") + `<div class="remark-entry"><span class="remark-time">${ts}</span> ${txt}</div>`;
+  
+ save(r)
+.then(() => {
+  closeModal('remarkModal');
+  showToast("Note Added");
+});
+
+}
+
+function closeModal(id) { document.getElementById(id).style.display = 'none'; editingId = null; }
 
 function complete(id){
-  if(!confirm("Mark as completed?")) return;
-  const i = records.findIndex(r => r.id === id);
-  const r = records[i];
+  if(!confirm("Mark as Completed?")) return;
+  const r = records.find(x => x.id === id);
   r.completedAt = formatDT(new Date());
   r.status = "Completed";
-  let c = JSON.parse(localStorage.getItem(COMPLETED_DB) || "[]");
-  c.push(r); 
-  localStorage.setItem(COMPLETED_DB, JSON.stringify(c));
-  records.splice(i, 1); 
-  save();
+save(r).then(() => showToast("Moved to Completed", "success"));
+
+ 
 }
 
 function del(id){
-  const reason = prompt("Reason for deleting?");
-  if(!reason) return;
+  if(!confirm("Delete permanently?")) return;
   const i = records.findIndex(x => x.id === id);
   const r = records[i];
-  let d = JSON.parse(localStorage.getItem(DELETE_DB) || "[]");
-  d.push({...r, reason, deletedAt: formatDT(new Date())});
-  localStorage.setItem(DELETE_DB, JSON.stringify(d));
-  records.splice(i, 1);
-  save();
-}
-
-// --- RENDERING ---
-function render(){
-  const now = new Date(); now.setHours(0,0,0,0);
-  let counts = {Total: records.length, Today: 0, Upcoming: 0, Backlog: 0};
   
-  // Sort oldest follow-ups first
-  records.sort((a,b) => parseDate(a.todayFollow) - parseDate(b.todayFollow));
+  let d = JSON.parse(localStorage.getItem(DELETED_DB) || "[]");
+  d.push({...r, deletedAt: formatDT(new Date())});
+  localStorage.setItem(DELETED_DB, JSON.stringify(d));
+  
+  db.collection("records").doc(id).delete()
+  .then(() => showToast("Record Deleted", "error"));
 
-  tableBody.innerHTML = "";
-const q = (searchInput?.value || "").toLowerCase();
-
-records.forEach(r => {
-
-    const d = parseDate(r.todayFollow);
-    let rowType = 'Upcoming';
-    if(d){
-      d.setHours(0,0,0,0);
-      if(d.getTime() === now.getTime()){ counts.Today++; rowType = 'Today'; }
-      else if(d < now){ counts.Backlog++; rowType = 'Backlog'; }
-      else counts.Upcoming++;
-    }
-
-    // KPI filter
-if(currentFilter !== 'Total' && currentFilter !== rowType) return;
-
-// 🔍 SEARCH FILTER
-if (
-  q &&
-  !r.jobcard.toLowerCase().includes(q) &&
-  !r.type.toLowerCase().includes(q)
-) return;
-
-
-    tableBody.innerHTML += `
-      <tr>
-        <td>
-          <i id="icon-${r.id}" class="fa fa-chevron-right expand-btn" onclick="toggleRow('${r.id}')"></i>
-          <b>${r.jobcard}</b>
-        </td>
-        <td>${r.type}</td>
-        <td>${r.todayFollow}</td>
-        <td><span style="font-weight:700; color:${rowType==='Backlog'?'#dc2626':rowType==='Today'?'#10b981':'#2563eb'}">${r.status||'Active'}</span></td>
-        <td style="text-align:right">
-          <button class="btn btn-ghost" title="Remark" onclick="addRemark('${r.id}')"><i class="fa fa-comment"></i></button>
-          <button class="btn btn-ghost" onclick="postpone('${r.id}')">Postpone</button>
-          <button class="btn btn-primary" onclick="complete('${r.id}')">COMPLETED</button>
-          <button class="btn btn-danger" onclick="del('${r.id}')"><i class="fa fa-trash"></i></button>
-        </td>
-      </tr>
-      <tr id="row-${r.id}" class="remark-row hidden">
-        <td colspan="5">
-          <div class="remark-box">
-            <strong>Remark History:</strong><br>
-            ${r.remark || "No remarks entered."}
-          </div>
-        </td>
-      </tr>`;
-  });
-
-  kTotal.innerText = counts.Total;
-  kToday.innerText = counts.Today;
-  kUpcoming.innerText = counts.Upcoming;
-  kBacklog.innerText = counts.Backlog;
+  
 }
 
-function save(){ localStorage.setItem(DB, JSON.stringify(records)); render(); }
+async function clearDatabase() {
+  if(!confirm("WARNING: This will wipe ALL records. Continue?")) return;
 
-function exportActiveToExcel() {
-  const ws = XLSX.utils.json_to_sheet(records.map(r => ({
+  const snap = await db.collection("records").get();
+  const batch = db.batch();
+
+  snap.forEach(doc => batch.delete(doc.ref));
+  await batch.commit();
+
+  showToast("Database Cleared", "error");
+}
+
+
+function save(record){
+  return db.collection("records")
+    .doc(record.id)
+    .set(record);
+}
+
+function logout(){ localStorage.removeItem("loggedInUser"); window.location.href = "login.html"; }
+
+function exportToExcel() {
+  const active = records.filter(r => r.status !== "Completed");
+  const ws = XLSX.utils.json_to_sheet(active.map(r => ({
     Jobcard: r.jobcard, 
+    SONumber: r.soNumber || "",
+    BoxNumber: r.boxNumber || "",
     Type: r.type, 
     FollowUpDate: r.todayFollow, 
-    Remark: r.remark, 
-    Status: r.status
+    Status: r.status || "Active",
+    RemarkPlain: r.remark ? r.remark.replace(/<[^>]*>?/gm, ' | ') : ""
   })));
   const wb = XLSX.utils.book_new(); 
-  XLSX.utils.book_append_sheet(wb, ws, "Active_FollowUps");
-  XLSX.writeFile(wb, "Working_Summary_Active.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "Active_List");
+  XLSX.writeFile(wb, "Working_Summary.xlsx");
 }
 
-// Initial render
-render();
+
 </script>
-<!-- Postpone Modal -->
-<div id="postponeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999">
-  <div style="
-    background:#fff;
-    width:420px;
-    margin:10% auto;
-    border-radius:12px;
-    padding:20px;
-    box-shadow:0 20px 40px rgba(0,0,0,.2)
-  ">
-    <h3 style="margin-top:0">Postpone Follow-Up</h3>
-
-    <label style="font-size:13px;font-weight:600">Follow-Up Date</label>
-    <input id="modalDate" style="width:100%;padding:10px;margin:6px 0 14px">
-
-    <label style="font-size:13px;font-weight:600">Remark <span style="color:red">*</span></label>
-    <textarea id="modalRemark" rows="3" style="width:100%;padding:10px"></textarea>
-
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
-      <button class="btn btn-ghost" onclick="closePostpone()">Cancel</button>
-      <button class="btn btn-primary" onclick="savePostpone()">Save</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
