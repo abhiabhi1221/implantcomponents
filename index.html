@@ -146,6 +146,23 @@ tbody td{padding:14px;border-top:1px solid var(--border);font-size:14px;vertical
   display:inline-block;
 }
 
+/* SEARCH STYLING */
+.search-container {
+  position: relative;
+  margin-bottom: 15px;
+}
+.search-container i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+}
+.search-container input {
+  padding-left: 35px;
+  background: #f1f5f9;
+}
+
 @media(max-width:1100px){
   .grid{grid-template-columns:1fr}
   .kpis{grid-template-columns:repeat(2,1fr)}
@@ -165,55 +182,29 @@ tbody td{padding:14px;border-top:1px solid var(--border);font-size:14px;vertical
   </div>
 
   <nav class="nav">
-
-  <!-- COMPONENT DEPARTMENT -->
   <div style="margin:14px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
     COMPONENT DEPARTMENT
   </div>
-
-  <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
+  <a href="index.html" class="active"><i class="fa fa-plus"></i> New Entry</a>
   <a href="page2.html"><i class="fa fa-list-check"></i> Working Summary</a>
   <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
   <a href="page4.html"><i class="fa fa-check-circle"></i> Completed</a>
   <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
   <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
 
- <!-- ATTACHMENT DEPARTMENT -->
-<div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
-  ATTACHMENT DEPARTMENT
-</div>
-
-<a href="page7.html">
-  <i class="fa fa-paperclip"></i> Attachment DC
-</a>
-
-<a href="page8.html">
-  <i class="fa fa-cubes"></i> Attachment WallDrop
-</a>
-
-
+  <div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
+    ATTACHMENT DEPARTMENT
+  </div>
+  <a href="page7.html"><i class="fa fa-paperclip"></i> Attachment DC</a>
+  <a href="page8.html"><i class="fa fa-cubes"></i> Attachment WallDrop</a>
 </nav>
-<button onclick="logout()" style="
-  background:none;
-  border:none;
-  color:#fff;
-  margin-top:20px;
-  font-weight:600;
-  cursor:pointer">
+
+<button onclick="logout()" style="background:none;border:none;color:#fff;margin-top:20px;font-weight:600;cursor:pointer">
   <i class="fa fa-sign-out-alt"></i> Logout
 </button>
-
-<script>
-function logout(){
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
-}
-</script>
-
 </aside>
 
 <main class="main">
-
 <div class="page-header">
   <div class="page-title">Components Follow Up</div>
   <div class="page-sub">Manage new entries and view rack allocations</div>
@@ -239,10 +230,16 @@ function logout(){
         <i class="fa fa-circle-exclamation"></i> Jobcard already exists in active records
       </small>
     </div>
-     <div class="form-row">
-  <label>Box Number</label>
-  <input id="boxNumberInput" placeholder="Enter Box Number">
-</div>
+
+    <div class="form-row">
+      <label>So number</label>
+      <input id="soNumberInput" readonly style="background:#f1f5f9;color:var(--primary);font-weight:700" placeholder="Auto-fills from Jobcard">
+    </div>
+
+    <div class="form-row">
+      <label>Box Number</label>
+      <input id="boxNumberInput" placeholder="Enter Box Number">
+    </div>
 
     <div class="form-row">
       <label>Created Timestamp</label>
@@ -254,17 +251,18 @@ function logout(){
       <select id="typeSelect" onchange="autoFollowDate(); saveDraft()">
         <option value="">Select Type</option>
         <option>JIG TRIAL</option>
-<option>ABUTMENT MILLING TRIAL</option>
-<option>COMPONENTS</option>
-<option>NEW MODEL/ NEW SCAN</option>
-<option>METAL TRIAL</option>
-<option>SPECIAL BITE BLOCK</option>
-<option>RESIN TRIAL</option>
-<option>SPECIAL TRAY</option>
-<option>BITE BLOCK</option>
-<option>TEETH SETTING WITH FRAME</option>
-<option>TEETH SET</option>
-<option>OTHERS</option>
+        <option>ABUTMENT MILLING TRIAL</option>
+        <option>M F FRAME TRIAL</option>
+        <option>COMPONENTS</option>
+        <option>NEW MODEL/ NEW SCAN</option>
+        <option>METAL TRIAL</option>
+        <option>SPECIAL BITE BLOCK</option>
+        <option>RESIN TRIAL</option>
+        <option>SPECIAL TRAY</option>
+        <option>BITE BLOCK</option>
+        <option>TEETH SETTING WITH FRAME</option>
+        <option>TEETH SET</option>
+        <option>OTHERS</option>
       </select>
     </div>
 
@@ -306,14 +304,19 @@ function logout(){
       </button>
     </div>
 
+    <div class="search-container">
+      <i class="fa fa-search"></i>
+      <input type="text" id="globalSearch" placeholder="Search Jobcard, SO, Box, or Rack..." oninput="renderTable()">
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>Jobcard</th>
+            <th>So number</th>
             <th>Box No</th>
             <th>Type</th>
-            <th>Created</th>
             <th>Rack No</th>
             <th style="text-align:right">Actions</th>
           </tr>
@@ -324,111 +327,113 @@ function logout(){
   </div>
 </section>
 </div>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-// --- CONFIGURATION ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyBJrlHhf-g-PgL7l_ZRFDCp-vzfHT1mj5Q",
+    authDomain: "implant-governance.firebaseapp.com",
+    projectId: "implant-governance",
+    storageBucket: "implant-governance.firebasestorage.app",
+    messagingSenderId: "649955056666",
+    appId: "1:649955056666:web:02338c5bda4f285e8045a3"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore(); // 🔑 GLOBAL DB
+</script>
+
+<script>
 const DB_KEY = "furecordsv3";
 const DRAFT_KEY = "p1_draft";
-// --- GLOBAL RACK NAMING (SAME AS WALLDROP) ---
+
+/* RACK CONFIGURATION */
 const TYPE_COLUMN_START = {
-  "JIG TRIAL": 1,
-  "ABUTMENT MILLING TRIAL": 4,
-  "COMPONENTS": 5,
-  "NEW MODEL/ NEW SCAN": 8,
-  "METAL TRIAL": 11,
-  "SPECIAL BITE BLOCK": 14,
-  "RESIN TRIAL": 15,
-  "SPECIAL TRAY": 18,
-  "BITE BLOCK": 21,
-  "TEETH SETTING WITH FRAME": 23,
-  "TEETH SET": 25,
-  "OTHERS": 27
+  'COMPONENTS': 1,
+  'NEW MODEL/ NEW SCAN': 4,
+  'ABUTMENT MILLING TRIAL': 6,
+  'M F FRAME TRIAL': 7,
+  'METAL TRIAL': 8,
+  'JIG TRIAL': 11,
+  'OTHERS': 14,
+  'RESIN TRIAL': 15,
+  'SPECIAL TRAY': 18,
+  'SPECIAL BITE BLOCK': 20,
+  'BITE BLOCK': 21,
+  'TEETH SETTING WITH FRAME': 23,
+  'TEETH SET': 25
+};
+
+const TYPE_COLUMNS = {
+  "JIG TRIAL": 3, "ABUTMENT MILLING TRIAL": 1, "M F FRAME TRIAL": 1, "NEW MODEL/ NEW SCAN": 2,
+  "METAL TRIAL": 3, "SPECIAL BITE BLOCK": 1, "RESIN TRIAL": 3, "SPECIAL TRAY": 2,
+  "BITE BLOCK": 2, "TEETH SETTING WITH FRAME": 2, "TEETH SET": 2, "OTHERS": 1
 };
 
 const ROW_LABELS = ['A','B','C','D','E','F'];
 
-
-// Auto-calculation days
 const FOLLOW_DAYS = {
-  "JIG TRIAL": 1,
-  "ABUTMENT MILLING TRIAL": 1,
-  "COMPONENTS": 3,
-  "NEW MODEL/ NEW SCAN": 1,
-  "METAL TRIAL": 3,
-  "SPECIAL BITE BLOCK": 1,
-  "RESIN TRIAL": 1,
-  "SPECIAL TRAY": 1,
-  "BITE BLOCK": 1,
-  "TEETH SETTING WITH FRAME": 3,
-  "TEETH SET": 3,
-  "OTHERS": 1
+  "JIG TRIAL": 1, "ABUTMENT MILLING TRIAL": 1,"M F FRAME TRIAL": 1, "COMPONENTS": 3, "NEW MODEL/ NEW SCAN": 1,
+  "METAL TRIAL": 3, "SPECIAL BITE BLOCK": 1, "RESIN TRIAL": 1, "SPECIAL TRAY": 1,
+  "BITE BLOCK": 1, "TEETH SETTING WITH FRAME": 3, "TEETH SET": 3, "OTHERS": 1
 };
+function getRackFromWallDrop(type) {
+  const all = records.filter(
+    r => r.status !== "Completed" && r.type === type
+  );
+
+  const rackIndex = Math.floor(all.length / 32); // EXACT WallDrop logic
+  const slot = (all.length % 32) + 1;
+
+  const columns = TYPE_COLUMNS[type] || 3;
+  const startCol = TYPE_COLUMN_START[type] || 1;
+
+  const row = Math.floor(rackIndex / columns);
+  const col = rackIndex % columns;
+
+  if (row >= ROW_LABELS.length) return null;
+
+  return {
+    rack: `${startCol + col}${ROW_LABELS[row]}`,
+    slot
+  };
+}
 
 
-// Rack Logic: Rack 1-2 (30 items), Rack 3-12 (36 items)
-const RACK_CAPACITIES = [30, 30, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36];
+let records = [];
 
-// --- STATE MANAGEMENT ---
-let records = JSON.parse(localStorage.getItem(DB_KEY) || "[]");
+db.collection("records")
+  .onSnapshot(snapshot => {
+    records = [];
+    snapshot.forEach(doc => records.push(doc.data()));
+    renderAll();   // refresh UI everywhere
+  });
+
 let activeFilter = "";
 
-// --- UTILITIES ---
 const pad = n => n.toString().padStart(2,"0");
-
 function formatDT(d){
   if(typeof d === 'string') d = new Date(d);
   return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
-
 function parseDate(str){
   if(!str) return null;
   const p=str.split(" ")[0].split("/");
   return new Date(p[2],p[1]-1,p[0]);
 }
-// SAME COLUMN LOGIC AS WALLDROP
-const TYPE_COLUMNS = {
-  "JIG TRIAL": 3,
-  "ABUTMENT MILLING TRIAL": 1,
-  "COMPONENTS": 4,           // 🔥 MATCH WALLDROP
-  "NEW MODEL/ NEW SCAN": 2,
-  "METAL TRIAL": 3,
-  "SPECIAL BITE BLOCK": 1,
-  "RESIN TRIAL": 3,
-  "SPECIAL TRAY": 2,
-  "BITE BLOCK": 2,
-  "TEETH SETTING WITH FRAME": 2,
-  "TEETH SET": 2,
-  "OTHERS": 1
-};
 
-// --- GLOBAL RACK NAME CALCULATOR ---
-function getGlobalRackName(type, index){
-  const start = TYPE_COLUMN_START[type] || 1;
-  const columns = TYPE_COLUMNS[type] || 3;
 
-  const col = index % columns;
-  const row = Math.floor(index / columns);
 
-  if (row >= ROW_LABELS.length) return "—";
-
-  return `${start + col}${ROW_LABELS[row]}`;
+function getSoNumber(jobcard) {
+  if (jobcard.length < 11) return "";
+  return jobcard.substring(4, 11);
 }
 
-
-// --- RACK LOGIC ---
-function calculateRack(index) {
-  let cumulativeCap = 0;
-  for (let i = 0; i < RACK_CAPACITIES.length; i++) {
-    cumulativeCap += RACK_CAPACITIES[i];
-    if (index < cumulativeCap) {
-      return i + 1; // Rack numbers are 1-based
-    }
-  }
-  return "Full";
-}
-
-// --- FORM HANDLERS ---
 function handleInput() {
+  const job = jobcardInput.value.trim();
+  soNumberInput.value = getSoNumber(job);
   checkDuplicate();
   if(!createdAt.value) createdAt.value = formatDT(new Date());
   saveDraft();
@@ -449,19 +454,15 @@ function checkDuplicate(){
   return exists;
 }
 
-// --- DRAFT FEATURE ---
 function saveDraft(){
-  if(!jobcardInput.value && !typeSelect.value) {
-    localStorage.removeItem(DRAFT_KEY);
-  } else {
-    const draft = {
-      jobcard: jobcardInput.value,
-      type: typeSelect.value,
-      created: createdAt.value,
-      follow: followDate.value
-    };
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }
+  const draft = {
+    jobcard: jobcardInput.value,
+    so: soNumberInput.value,
+    type: typeSelect.value,
+    created: createdAt.value,
+    follow: followDate.value
+  };
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
   renderKPIs();
 }
 
@@ -469,6 +470,7 @@ function loadDraft(){
   const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
   if(draft){
     jobcardInput.value = draft.jobcard || "";
+    soNumberInput.value = draft.so || "";
     typeSelect.value = draft.type || "";
     createdAt.value = draft.created || "";
     followDate.value = draft.follow || "";
@@ -476,40 +478,48 @@ function loadDraft(){
   }
 }
 
-// --- CRUD OPERATIONS ---
 function submitEntry(){
   const job = jobcardInput.value.trim();
   const type = typeSelect.value;
   const id = editId.value;
 
   if(!job || !type) return alert("Please enter Jobcard and select Type");
-  if(!id && checkDuplicate()) return alert("This Jobcard already exists in active records.");
+  const rackInfo = id
+  ? records.find(r => r.id === id)
+  : getRackFromWallDrop(type);
 
-  if(id){
-    // Update existing
-    const i = records.findIndex(r => r.id === id);
-    if(i > -1){
-  records[i].jobcard = job;
-  records[i].boxNumber = boxNumberInput.value.trim(); // ✅ HERE
-  records[i].type = type;
-  records[i].todayFollow = followDate.value;
+if (!rackInfo) {
+  return alert("All racks are full for this type");
 }
-  } else {
-    // Create new
-    records.unshift({
-  id: Date.now().toString(),
+
+  const entryData = {
+  id: id || Date.now().toString(),
   jobcard: job,
-  boxNumber: boxNumberInput.value.trim(), // ✅ NEW
-  type: type,
+  soNumber: soNumberInput.value,
+  boxNumber: boxNumberInput.value.trim(),
+  type,
+  rack: rackInfo.rack,      // ✅ derived from WallDrop
+  rackSlot: rackInfo.slot,  // optional but useful
   timestamp: createdAt.value,
   todayFollow: followDate.value,
   status: "Active"
-});
+};
 
+
+  if(id){
+    const i = records.findIndex(r => r.id === id);
+    if(i > -1) records[i] = entryData;
   }
 
-  localStorage.setItem(DB_KEY, JSON.stringify(records));
-  localStorage.removeItem(DRAFT_KEY); // Clear draft on success
+  db.collection("records")
+  .doc(entryData.id)
+  .set(entryData)
+  .then(() => {
+    localStorage.removeItem(DRAFT_KEY);
+    resetForm();
+  });
+
+  localStorage.removeItem(DRAFT_KEY);
   resetForm();
   renderAll();
 }
@@ -519,6 +529,7 @@ function editEntry(id){
   if(!r) return;
   editId.value = r.id;
   jobcardInput.value = r.jobcard;
+  soNumberInput.value = r.soNumber || getSoNumber(r.jobcard);
   boxNumberInput.value = r.boxNumber || "";
   typeSelect.value = r.type;
   followDate.value = r.todayFollow;
@@ -528,13 +539,9 @@ function editEntry(id){
 }
 
 function resetForm(){
-  editId.value = "";
-  jobcardInput.value = "";
-  boxNumberInput.value = "";
-  typeSelect.value = "";
-  followDate.value = "";
-  createdAt.value = "";
-  dupWarn.style.display = "none";
+  editId.value = ""; jobcardInput.value = ""; soNumberInput.value = "";
+  boxNumberInput.value = ""; typeSelect.value = ""; followDate.value = "";
+  createdAt.value = ""; dupWarn.style.display = "none";
   saveBtn.innerHTML = '<i class="fa fa-check"></i> Save Entry';
   localStorage.removeItem(DRAFT_KEY);
   renderKPIs();
@@ -542,49 +549,41 @@ function resetForm(){
 
 function remove(id){
   if(confirm("Permanently delete this record?")){
-    records = records.filter(r => r.id !== id);
-    localStorage.setItem(DB_KEY, JSON.stringify(records));
-    renderAll();
+   db.collection("records").doc(id).delete();
   }
 }
 
-// --- RENDERING ---
 function renderTable(){
   tableBody.innerHTML = "";
-  
-  // Filter active records only (Completed ones move to Page 4)
+  const searchTerm = globalSearch.value.toLowerCase();
   const activeRecords = records.filter(r => r.status !== 'Completed');
 
   activeRecords
     .filter(r => !activeFilter || r.type === activeFilter)
     .forEach(r => {
-      // Calculate Rack: Logic must match Page 6
-      // 1. Get all active items of this specific type
-      const sameType = activeRecords.filter(item => item.type === r.type);
-      
-      // 2. Sort them Oldest to Newest to assign Rack 1 to the oldest item
-      const chronological = [...sameType].reverse();
-      
-      // 3. Find index of current item in that chronological list
-      const typeIndex = chronological.findIndex(item => item.id === r.id);
-      
-      // 4. Calculate Rack
-      const rackName = getGlobalRackName(r.type, typeIndex);
+      const rackName = r.rack || "-";
 
+      
+      const matchesSearch = 
+        r.jobcard.toLowerCase().includes(searchTerm) || 
+        (r.soNumber && r.soNumber.toLowerCase().includes(searchTerm)) ||
+        (r.boxNumber && r.boxNumber.toLowerCase().includes(searchTerm)) ||
+        rackName.toLowerCase().includes(searchTerm);
 
-      tableBody.innerHTML += `
-      <tr>
-        <td><b>${r.jobcard}</b></td>
-<td>${r.boxNumber || "-"}</td>
-<td>${r.type}</td>
-<td>${r.timestamp}</td>
-
-        <td><span class="rack-badge">${rackName}</span></td>
-        <td style="text-align:right">
-          <button class="btn btn-ghost" onclick="editEntry('${r.id}')" title="Edit"><i class="fa fa-pen"></i></button>
-          <button class="btn btn-danger" onclick="remove('${r.id}')" title="Delete"><i class="fa fa-trash"></i></button>
-        </td>
-      </tr>`;
+      if(!searchTerm || matchesSearch) {
+        tableBody.innerHTML += `
+        <tr>
+          <td><b>${r.jobcard}</b></td>
+          <td style="color:var(--primary);font-weight:700">${r.soNumber || "-"}</td>
+          <td>${r.boxNumber || "-"}</td>
+          <td>${r.type}</td>
+          <td><span class="rack-badge">${rackName}</span></td>
+          <td style="text-align:right">
+            <button class="btn btn-ghost" onclick="editEntry('${r.id}')"><i class="fa fa-pen"></i></button>
+            <button class="btn btn-danger" onclick="remove('${r.id}')"><i class="fa fa-trash"></i></button>
+          </td>
+        </tr>`;
+      }
     });
 }
 
@@ -597,36 +596,42 @@ function renderFilters(){
 
 function setFilter(t){ activeFilter = t; renderAll(); }
 
-function renderDateSummary(){
-  const map = {};
-  records.filter(r=>r.status!=='Completed').forEach(r => {
-    if(!r.todayFollow) return;
-    const d = r.todayFollow.split(" ")[0];
-    map[d] = (map[d] || 0) + 1;
-  });
-  dateSummary.innerHTML = Object.entries(map)
-    .map(([d, c]) => `<div class="summary-row"><span>${d}</span><b>${c}</b></div>`).join("") || "No active data";
-}
+/* REGENERATION LOGIC FOR SUMMARIES & KPI */
+function renderSummaries() {
+  const active = records.filter(r => r.status !== 'Completed');
 
-function renderTypeSummary(){
-  const map = {};
-  records.filter(r=>r.status!=='Completed').forEach(r => map[r.type] = (map[r.type] || 0) + 1);
-  typeSummary.innerHTML = Object.entries(map)
-    .map(([t, c]) => `<div class="summary-row"><span>${t}</span><b>${c}</b></div>`).join("") || "No active data";
+  // Type Summary
+  const typeMap = {};
+  active.forEach(r => { typeMap[r.type] = (typeMap[r.type] || 0) + 1; });
+  document.getElementById('typeSummary').innerHTML = Object.entries(typeMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, count]) => `<div class="summary-row"><span>${type}</span><span class="rack-badge">${count}</span></div>`)
+    .join("") || "No active data";
+
+  // Date Summary
+  const dateMap = {};
+  active.forEach(r => { const datePart = r.todayFollow.split(" ")[0]; dateMap[datePart] = (dateMap[datePart] || 0) + 1; });
+  document.getElementById('dateSummary').innerHTML = Object.entries(dateMap)
+    .sort((a, b) => {
+      const da = a[0].split("/"), db = b[0].split("/");
+      return new Date(da[2], da[1]-1, da[0]) - new Date(db[2], db[1]-1, db[0]);
+    })
+    .map(([date, count]) => `<div class="summary-row"><span>${date}</span><span style="font-weight:700;color:var(--primary)">${count} cases</span></div>`)
+    .join("") || "No upcoming follow-ups";
 }
 
 function renderKPIs(){
-  let today = 0, overdue = 0;
-  const now = new Date(); now.setHours(0,0,0,0);
-  
   const active = records.filter(r => r.status !== 'Completed');
+  const now = new Date(); now.setHours(0,0,0,0);
+  let today = 0, overdue = 0;
 
   active.forEach(r => {
-    const d = parseDate(r.todayFollow);
-    if(!d) return;
-    d.setHours(0,0,0,0);
-    if(d.getTime() === now.getTime()) today++;
-    if(d < now) overdue++;
+    const fDate = parseDate(r.todayFollow);
+    if(fDate) {
+      fDate.setHours(0,0,0,0);
+      if(fDate.getTime() === now.getTime()) today++;
+      if(fDate.getTime() < now.getTime()) overdue++;
+    }
   });
 
   kpiTotal.innerText = active.length;
@@ -636,35 +641,24 @@ function renderKPIs(){
 }
 
 function exportExcel(){
-  const ws = XLSX.utils.json_to_sheet(
-  records.filter(r=>r.status!=='Completed').map(r => ({
-    Jobcard: r.jobcard,
-    BoxNumber: r.boxNumber || "",
-    Type: r.type,
-    Created: r.timestamp,
-    FollowUp: r.todayFollow,
-    Status: r.status
-  }))
-);
-
+  const ws = XLSX.utils.json_to_sheet(records.filter(r=>r.status!=='Completed'));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Active_FollowUps");
-  XLSX.writeFile(wb, "Active_FollowUp_Report.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "Active");
+  XLSX.writeFile(wb, "Report.xlsx");
 }
 
 function renderAll(){
-  renderKPIs();
-  renderFilters();
-  renderTable();
-  renderDateSummary();
-  renderTypeSummary();
+  renderKPIs(); renderFilters(); renderTable(); renderSummaries();
 }
 
-// Initialize
+function logout(){
+  localStorage.removeItem("loggedInUser");
+  window.location.href = "login.html";
+}
+
 loadDraft();
 renderAll();
 </script>
-
 </main>
 </div>
 </body>
