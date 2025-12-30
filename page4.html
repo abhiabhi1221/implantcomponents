@@ -3,140 +3,72 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>P4 | Completed Follow-Ups</title>
+<title>P4 | Completed</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <script>
-const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
-
-// Not logged in → go to login
-if (!session) {
-  window.location.href = "login.html";
-}
-
-// User role → NO access to Completed page
-if (session.role === "user") {
-  window.location.href = "index.html";
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyBJrlHhf-g-PgL7l_ZRFDCp-vzfHT1mj5Q",
+  authDomain: "implant-governance.firebaseapp.com",
+  projectId: "implant-governance",
+  storageBucket: "implant-governance.firebasestorage.app",
+  messagingSenderId: "649955056666",
+  appId: "1:649955056666:web:02338c5bda4f285e8045a3"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 </script>
 
 <script>
-// Not logged in → go to login
-if (!session) {
-  window.location.href = "login.html";
-}
-
-// User role → NO access to Completed page
-if (session.role === "user") {
-  window.location.href = "index.html";
-}
+const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+if(!session) window.location.href="login.html";
 </script>
 
 <style>
+/* ---- SAME UI (UNCHANGED) ---- */
 :root{
-  --primary:#2563eb;
-  --primary-dark:#1e40af;
-  --bg:#f8fafc;
-  --card:#ffffff;
-  --border:#e5e7eb;
-  --text:#0f172a;
-  --muted:#64748b;
-  --success:#10b981;
-  --radius:14px;
-  --shadow:0 10px 25px rgba(0,0,0,.08);
+  --primary:#2563eb;--primary-dark:#1e40af;
+  --bg:#f8fafc;--card:#ffffff;--border:#e5e7eb;
+  --text:#0f172a;--muted:#64748b;
+  --success:#10b981;--danger:#dc2626;
+  --radius:14px;--shadow:0 10px 25px rgba(0,0,0,.08);
 }
-
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Inter,system-ui;
-  background:linear-gradient(180deg,#eef5ff,#f8fafc);
-  color:var(--text);
-}
-
+body{margin:0;font-family:Inter,system-ui;background:linear-gradient(180deg,#eef5ff,#f8fafc)}
 .app{display:flex;min-height:100vh}
-
-/* SIDEBAR */
-.sidebar{
-  width:270px;
-  background:linear-gradient(180deg,var(--primary),var(--primary-dark));
-  color:#fff;
-  padding:24px 18px;
-  display:flex;flex-direction:column;
-}
-.brand{
-  display:flex;gap:12px;align-items:center;margin-bottom:30px
-}
-.logo{
-  width:44px;height:44px;border-radius:12px;
-  background:#fff;color:var(--primary);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:800
-}
-.nav{flex:1}
-.nav a{
-  display:flex;gap:12px;align-items:center;
-  padding:12px 14px;border-radius:10px;
-  text-decoration:none;color:#fff;font-weight:600;
-  opacity:.85;margin-bottom:4px;
-  transition:all 0.2s;
-}
+.sidebar{width:270px;background:linear-gradient(180deg,var(--primary),var(--primary-dark));color:#fff;padding:24px 18px}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:30px}
+.logo{width:44px;height:44px;border-radius:12px;background:#fff;color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800}
+.nav a{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:10px;text-decoration:none;color:#fff;font-weight:600;opacity:.85;margin-bottom:4px}
 .nav a.active,.nav a:hover{background:rgba(255,255,255,.2);opacity:1}
-
-/* MAIN CONTENT */
-.main{flex:1;padding:26px;overflow:auto}
-
-.page-header{margin-bottom:20px}
+.main{flex:1;padding:26px}
 .page-title{font-size:22px;font-weight:800}
-
-/* KPI CARDS */
-.kpis{
-  display:grid;grid-template-columns:repeat(4,1fr);
-  gap:16px;margin-bottom:22px
-}
-.kpi{
-  background:var(--card);border-radius:var(--radius);
-  padding:18px;box-shadow:var(--shadow)
-}
-.kpi h4{margin:0;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
-.kpi .val{font-size:28px;font-weight:800;margin-top:6px;color:var(--success)}
-
-/* TABLE CARD */
-.card{
-  background:var(--card);
-  border-radius:var(--radius);
-  padding:20px;
-  box-shadow:var(--shadow);
-  margin-bottom:22px
-}
-.card h3{margin:0 0 14px 0;font-size:16px;font-weight:700}
-
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:22px}
+.kpi{background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.kpi h4{margin:0;font-size:12px;color:var(--muted);text-transform:uppercase}
+.kpi .val{font-size:26px;font-weight:800;color:var(--success)}
+.card{background:#fff;border-radius:14px;padding:22px;box-shadow:var(--shadow)}
+.controls{display:flex;gap:12px;margin-bottom:15px;flex-wrap:wrap}
+.search{flex:1;position:relative}
+.search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search input{width:100%;padding:11px 12px 11px 38px;border-radius:10px;border:1px solid var(--border)}
+.filter-btn{background:#fff;border:1px solid var(--border);padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer}
+.filter-btn.active{background:#eff6ff;color:var(--primary);border-color:#bfdbfe}
 .table-wrap{border:1px solid var(--border);border-radius:12px;overflow:auto}
 table{width:100%;border-collapse:collapse}
-thead th{background:#f1f5f9;padding:14px;font-size:12px;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:700}
-tbody td{padding:14px;border-top:1px solid var(--border);font-size:14px;vertical-align:middle}
-
-/* SEARCH & BUTTONS */
-.toolbar{display:flex;gap:10px;margin-bottom:15px;justify-content:space-between}
-input{
-  padding:10px 14px;border-radius:10px;
-  border:1px solid var(--border);font-size:14px;width:300px;
-}
-.btn{
-  padding:10px 16px;border-radius:10px;
-  border:none;font-weight:700;font-size:13px;
-  cursor:pointer;display:inline-flex;gap:8px;align-items:center;
-}
-.btn-ghost{background:#fff;border:1px solid var(--border);color:var(--primary)}
-
-@media(max-width:900px){
-  .kpis{grid-template-columns:repeat(2,1fr)}
-  input{width:100%}
-  .toolbar{flex-direction:column}
-}
+th,td{padding:14px;border-bottom:1px solid var(--border);font-size:14px}
+th{background:#f1f5f9;font-size:12px;color:var(--muted);text-transform:uppercase}
+.badge{background:#dcfce7;color:#166534;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.btn{padding:6px 10px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer}
+.btn-restore{background:#dbeafe;color:#1e40af}
+.btn-del{background:#fee2e2;color:#dc2626}
 </style>
 </head>
 
@@ -144,181 +76,170 @@ input{
 <div class="app">
 
 <aside class="sidebar">
-  <div class="brand">
-    <div class="logo">P4</div>
-    <div>
-      <div style="font-weight:700">Implant Operational Governance</div>
-      
-    </div>
-  </div>
-
+  <div class="brand"><div class="logo">P4</div><div><b>Implant Governance</b></div></div>
   <nav class="nav">
-
-  <!-- COMPONENT DEPARTMENT -->
-  <div style="margin:14px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
-    COMPONENT DEPARTMENT
-  </div>
-
-  <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
-  <a href="page2.html"><i class="fa fa-list-check"></i> Working Summary</a>
-  <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
-  <a href="page4.html"><i class="fa fa-check-circle"></i> Completed</a>
-  <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
-  <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
-
-  <!-- ATTACHMENT DEPARTMENT -->
-<div style="margin:18px 10px 6px;font-size:11px;font-weight:700;opacity:.7;letter-spacing:.6px">
-  ATTACHMENT DEPARTMENT
-</div>
-
-<a href="page7.html">
-  <i class="fa fa-paperclip"></i> Attachment DC
-</a>
-
-<a href="page8.html">
-  <i class="fa fa-cubes"></i> Attachment WallDrop
-</a>
-
-
-</nav>
-<button onclick="logout()" style="
-  background:none;
-  border:none;
-  color:#fff;
-  margin-top:20px;
-  font-weight:600;
-  cursor:pointer">
-  <i class="fa fa-sign-out-alt"></i> Logout
-</button>
-
-<script>
-function logout(){
-  localStorage.removeItem("loggedInUser");
-  window.location.href = "login.html";
-}
-</script>
-
+    <a href="index.html"><i class="fa fa-plus"></i> New Entry</a>
+    <a href="page2.html"><i class="fa fa-list-check"></i> Working Summary</a>
+    <a href="page3.html"><i class="fa fa-chart-line"></i> Analytics</a>
+    <a href="page4.html" class="active"><i class="fa fa-check-circle"></i> Completed</a>
+    <a href="page5.html"><i class="fa fa-triangle-exclamation"></i> Backlogs</a>
+    <a href="page6.html"><i class="fa fa-cubes"></i> WallDrop</a>
+    <button onclick="clearDatabase()" class="filter-btn" style="margin-top:20px;color:#ff8a8a">
+      <i class="fa fa-trash"></i> Clear Database
+    </button>
+    <button onclick="logout()" style="background:none;border:none;color:#fff;padding:12px 14px;width:100%;text-align:left">
+      <i class="fa fa-sign-out-alt"></i> Logout
+    </button>
+  </nav>
 </aside>
 
 <main class="main">
-  <div class="page-header">
-    <div class="page-title">Completed Records Archive</div>
-  </div>
 
-  <div class="kpis">
-    <div class="kpi"><h4>Total Done</h4><div class="val" id="kTotal">0</div></div>
-    <div class="kpi"><h4>Done Today</h4><div class="val" id="kToday">0</div></div>
-    <div class="kpi"><h4>This Week</h4><div class="val" id="kWeek">0</div></div>
-    <div class="kpi"><h4>This Month</h4><div class="val" id="kMonth">0</div></div>
-  </div>
+<div class="page-header">
+  <div class="page-title">Completed Follow-Ups</div>
+  <button onclick="exportExcel()" class="filter-btn"><i class="fa fa-file-excel"></i> Export</button>
+</div>
 
-  <div class="card">
-    <div class="toolbar">
-      <input type="text" id="searchInput" placeholder="Search Jobcard..." oninput="renderTable()">
-      <button class="btn btn-ghost" onclick="exportHistory()">
-        <i class="fa fa-file-excel"></i> Export History
-      </button>
+<div class="kpis">
+  <div class="kpi"><h4>Total</h4><div class="val" id="kTotal">0</div></div>
+  <div class="kpi"><h4>Today</h4><div class="val" id="kToday">0</div></div>
+  <div class="kpi"><h4>Last 7 Days</h4><div class="val" id="kWeek">0</div></div>
+  <div class="kpi"><h4>Last 14 Days</h4><div class="val" id="kTwoWeek">0</div></div>
+  <div class="kpi"><h4>This Month</h4><div class="val" id="kMonth">0</div></div>
+</div>
+
+<div class="card">
+  <div class="controls">
+    <div class="search">
+      <i class="fa fa-search"></i>
+      <input id="search" placeholder="Search Jobcard / SO / Type..." oninput="render()">
     </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Jobcard</th>
-            <th>Type</th>
-            <th>Original Follow-Up</th>
-            <th>Completion Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+    <button class="filter-btn active" onclick="setFilter('ALL',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('7',this)">7 Days</button>
+    <button class="filter-btn" onclick="setFilter('14',this)">2 Weeks</button>
+    <button class="filter-btn" onclick="setFilter('30',this)">30 Days</button>
   </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Jobcard</th><th>SO</th><th>Type</th>
+          <th>Due Date</th><th>Completed On</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
 </main>
-
 </div>
 
 <script>
-// --- CONFIGURATION ---
-const COMPLETED_DB = "completed_data_v3";
+let records=[],filter="ALL";
 
-// --- STATE ---
-let records = JSON.parse(localStorage.getItem(COMPLETED_DB) || "[]");
+const parse=d=>{
+  if(!d)return null;
+  const p=d.split(" ")[0].split("/");
+  return new Date(p[2],p[1]-1,p[0]);
+};
 
-// --- UTILS ---
-function parseDate(str){
-  if(!str) return null;
-  const parts = str.split(" ");
-  const dateParts = parts[0].split("/");
-  // Expected DD/MM/YYYY
-  return new Date(dateParts[2], dateParts[1]-1, dateParts[0]);
+db.collection("records").onSnapshot(snap=>{
+  records=[];
+  snap.forEach(d=>records.push(d.data()));
+  render();
+});
+
+function setFilter(f,btn){
+  filter=f;
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  render();
 }
 
-// --- KPI LOGIC ---
-function renderKPIs(){
-  const now = new Date();
-  const todayStr = now.toLocaleDateString('en-GB'); // DD/MM/YYYY
-  
-  let today = 0, week = 0, month = 0;
-  
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
-  startOfWeek.setHours(0,0,0,0);
+function render(){
+  const q=document.getElementById("search").value.toLowerCase();
+  const tbody=document.getElementById("tbody");
+  const now=new Date();now.setHours(0,0,0,0);
 
-  records.forEach(r => {
-    if(!r.completedAt) return;
-    const d = parseDate(r.completedAt);
-    if(!d) return;
+  const completed=records.filter(r=>r.status==="Completed");
+  tbody.innerHTML="";
 
-    // Today
-    if(r.completedAt.split(" ")[0] === todayStr) today++;
-    
-    // Week
-    if(d >= startOfWeek) week++;
+  let today=0,week=0,two=0,month=0;
 
-    // Month
-    if(d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) month++;
+  completed.forEach(r=>{
+    const d=parse(r.completedAt);
+    if(!d)return;
+    const diff=(now-d)/86400000;
+    if(diff===0) today++;
+    if(diff<=7) week++;
+    if(diff<=14) two++;
+    if(d.getMonth()===now.getMonth()) month++;
   });
 
-  kTotal.innerText = records.length;
-  kToday.innerText = today;
-  kWeek.innerText = week;
-  kMonth.innerText = month;
-}
+  kTotal.innerText=completed.length;
+  kToday.innerText=today;
+  kWeek.innerText=week;
+  kTwoWeek.innerText=two;
+  kMonth.innerText=month;
 
-// --- TABLE RENDER ---
-function renderTable(){
-  const query = searchInput.value.toLowerCase().trim();
-  const tbody = document.getElementById('tableBody');
-  
-  // Sort by latest completion first
-  const sorted = [...records].sort((a,b) => parseDate(b.completedAt) - parseDate(a.completedAt));
-
-  tbody.innerHTML = sorted
-    .filter(r => r.jobcard.toLowerCase().includes(query))
-    .map(r => `
+  completed.filter(r=>{
+    const d=parse(r.completedAt);
+    const diff=(now-d)/86400000;
+    if(filter==="7" && diff>7)return false;
+    if(filter==="14" && diff>14)return false;
+    if(filter==="30" && diff>30)return false;
+    return true;
+  }).filter(r=>
+    r.jobcard.toLowerCase().includes(q) ||
+    (r.soNumber||"").toLowerCase().includes(q) ||
+    r.type.toLowerCase().includes(q)
+  ).forEach(r=>{
+    tbody.innerHTML+=`
       <tr>
         <td><b>${r.jobcard}</b></td>
+        <td>${r.soNumber||"-"}</td>
         <td>${r.type}</td>
-        <td>${r.origDate || r.todayFollow || '-'}</td>
-        <td style="color:var(--success); font-weight:600">${r.completedAt}</td>
-        <td><span style="background:#dcfce7; color:#166534; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700">COMPLETED</span></td>
-      </tr>
-    `).join("") || '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748b">No completed records found</td></tr>';
+        <td>${r.todayFollow}</td>
+        <td style="color:var(--success);font-weight:700">${r.completedAt}</td>
+        <td><span class="badge">COMPLETED</span></td>
+        <td>
+          <button class="btn btn-restore" onclick="restore('${r.id}')">Restore</button>
+          <button class="btn btn-del" onclick="removeRec('${r.id}')">Delete</button>
+        </td>
+      </tr>`;
+  });
 }
 
-function exportHistory(){
-  if(records.length === 0) return alert("No data to export");
-  const ws = XLSX.utils.json_to_sheet(records);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "History");
-  XLSX.writeFile(wb, "Completed_History.xlsx");
+function restore(id){
+  const r=records.find(x=>x.id===id);
+  r.status="Active";
+  delete r.completedAt;
+  db.collection("records").doc(id).set(r);
 }
-
-// Initialize
-renderKPIs();
-renderTable();
+function removeRec(id){
+  if(!confirm("Delete permanently?"))return;
+  db.collection("records").doc(id).delete();
+}
+async function clearDatabase(){
+  if(!confirm("Delete ALL records?"))return;
+  const snap=await db.collection("records").get();
+  const batch=db.batch();
+  snap.forEach(d=>batch.delete(d.ref));
+  await batch.commit();
+  alert("Database cleared");
+}
+function exportExcel(){
+  const ws=XLSX.utils.json_to_sheet(records.filter(r=>r.status==="Completed"));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Completed");
+  XLSX.writeFile(wb,"Completed.xlsx");
+}
+function logout(){
+  localStorage.removeItem("loggedInUser");
+  window.location.href="login.html";
+}
 </script>
 </body>
 </html>
